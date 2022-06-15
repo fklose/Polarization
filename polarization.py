@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from routines.load import load
 from routines.poisson import fit as poisson_fit
-from functions.models import peaks
+from functions.models import peaks, F2_pi_sublevels
 from scipy.optimize import curve_fit
 
 # root_path = "/home/felix/fklose/Data/ROOT_Files/"
@@ -183,23 +183,32 @@ lock = 64.48
 
 x = 2*np.interp(V, AOM_V, AOM_f) + lock
 
-p0 = [80, 800, x[np.argmax(n)], 9, 1, 1]
+# p0 = [80, 800, x[np.argmax(n)], 9, 1, 1]
+
+x0 = 363.61
+x0_err = 0.48
+h = 9.92
+g = 1.1/2
+
+p0 = [0, 0, 0, 20, 100, 1, -2.5]
+
+model = lambda x, am2, am1, a0, a1, a2, s, B: F2_pi_sublevels(x, am2, am1, a0, a1, a2, x0, h, s, g, B)
 
 # Get a better guess using least squares fit
-p, _ = curve_fit(peaks, x, n, p0)
+p, _ = curve_fit(model, x, n, p0, bounds=([0, 0, 0, 0, 0, 0, -10], [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, 10]))
 # Perform final fit using a poisson fit
-p, E1, E2, sigma, X2 = poisson_fit(peaks, x, n, p, iter=200)
+p, E1, E2, sigma, X2 = poisson_fit(model, x, n, p, iter=200)
 
-# print(*np.round(p, 2))
+print(*np.round(p, 2))
 # print(*np.round(E1, 2))
 # print(*np.round(E2, 2))
 # print(*np.round(sigma, 2))
 # print(np.round(X2 / (len(x) - len(p)), 2))
 
 fit.errorbar(x, n, np.sqrt(n), capsize=3, color="black", ls="", label=f"{sum(n)} Events", marker=".")
-fit.plot(x, peaks(x, *p0), color="red", ls="dashed", label="Guess")
-fit.plot(x, peaks(x, *p), color="magenta", label="Fit")
-res.errorbar(x, n - peaks(x, *p), np.sqrt(n), color="black", capsize=3, ls="", marker=".")
+fit.plot(x, model(x, *p0), color="red", ls="dashed", label="Guess")
+fit.plot(x, model(x, *p), color="magenta", label="Fit")
+# res.errorbar(x, n - model(x, *p), np.sqrt(n), color="black", capsize=3, ls="", marker=".")
 fit.set_xticks([])
 res.set_xlabel("AOM Steps")
 fit.set_ylabel("Counts")

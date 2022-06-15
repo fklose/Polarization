@@ -56,10 +56,7 @@ def fit(f, x, y, p0, iter=200, weights=None):
     p = np.copy(p0)
     
     for _ in range(iter):
-        B = makeMatrix(f, x, y, p, eps)
-        b = makeVector(f, x, y, p, eps)
-        dp = np.linalg.solve(B, b)
-        p += dp
+        p += np.linalg.solve(makeMatrix(f, x, y, p, eps), makeVector(f, x, y, p, eps))
     
     # Compute Chi-Squared
     X2 = np.zeros(np.shape(y))
@@ -70,7 +67,7 @@ def fit(f, x, y, p0, iter=200, weights=None):
     
     # Compute errors
     E1 = np.zeros(M)
-    B_inv = np.linalg.inv(B)
+    B_inv = np.linalg.inv(makeMatrix(f, x, y, p, eps))
     for i in range(M):
         # main diagonal of B_inv looks like its always negative?
         # Fixed by swapping the signs of the elements in b and B

@@ -1,10 +1,17 @@
 from functions.math import voigt
+import numpy as np
 
 def peaks(x, A, B, x0, h, s, g):
     return A*voigt(x, x0 - h, s, g) + B*voigt(x, x0, s, g)
 
 
 def F2_pi_sublevels(x, am2, am1, a0, a1, a2, x0, h, s, g, B):
+    
+    am2 = np.abs(am2)
+    am1 = np.abs(am1)
+    a0 = np.abs(a0)
+    a1 = np.abs(a1)
+    a2 = np.abs(a2)
     
     mu_B = 1.399
     
