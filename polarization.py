@@ -177,18 +177,17 @@ V_high = 9.58 # [V]
 dV = (V_high - V_low) / 52
 
 # Compute programmed AOM voltage steps
-V = np.array([i * dV for i in range(53)]) + V_low
+V = np.array([i * dV for i in range(53)])[1:] + V_low
 
 lock = 64.48
 
-x = 2*np.interp(V, AOM_V, AOM_f)[1:] + lock
+x = 2*np.interp(V, AOM_V, AOM_f) + lock
 
-print(x)
+p0 = [80, 800, x[np.argmax(n)], 9, 1, 1]
 
-p0 = [80, 800, 367, 7, 1, 1]
-
+# Get a better guess using least squares fit
 p, _ = curve_fit(peaks, x, n, p0)
-
+# Perform final fit using a poisson fit
 p, E1, E2, sigma, X2 = poisson_fit(peaks, x, n, p, iter=200)
 
 # print(*np.round(p, 2))
@@ -201,14 +200,10 @@ fit.errorbar(x, n, np.sqrt(n), capsize=3, color="black", ls="", label=f"{sum(n)}
 fit.plot(x, peaks(x, *p0), color="red", ls="dashed", label="Guess")
 fit.plot(x, peaks(x, *p), color="magenta", label="Fit")
 res.errorbar(x, n - peaks(x, *p), np.sqrt(n), color="black", capsize=3, ls="", marker=".")
-
 fit.set_xticks([])
 res.set_xlabel("AOM Steps")
-
 fit.set_ylabel("Counts")
 res.set_ylabel("Counts - Fit")
-
 fit.legend()
-
 plt.subplots_adjust(hspace=0, wspace=0)
 plt.show()
