@@ -159,19 +159,15 @@ Cuts &= POS_Cut
 
 # Plot final spectrum and fit
 fig = plt.figure(figsize=(6, 4))
-
 gs = fig.add_gridspec(2, 1, height_ratios=[3, 1])
-
 fit = fig.add_subplot(gs[0,0])
 res = fig.add_subplot(gs[1,0])
 
 # Start at 1 since all 0 counts are removed
 bins = [i for i in range(1, 54)]
 
-n, bins, _ = fit.hist(bits[Cuts], color="black", histtype="step", label=f"{len(bits[Cuts])} Events", bins=bins)
-
-x = bins[:-1]
-y = n
+# n, bins, _ = fit.hist(bits[Cuts], color="black", histtype="step", label=f"{len(bits[Cuts])} Events", bins=bins)
+n, bins = np.histogram(bits[Cuts], bins=bins)
 
 # Calibrate x-axis
 AOM_V, AOM_f = np.loadtxt("./AOM Calibrations/M1212-aQ50-2/calibration.csv", unpack=True, delimiter=",")
@@ -183,13 +179,17 @@ dV = (V_high - V_low) / 52
 # Compute programmed AOM voltage steps
 V = np.array([i * dV for i in range(53)]) + V_low
 
+lock = 64.48
 
+x = 2*np.interp(V, AOM_V, AOM_f)[1:] + lock
 
-p0 = [80, 800, 40, 12, 1, 1]
+print(x)
 
-p, _ = curve_fit(peaks, x, y, p0)
+p0 = [80, 800, 367, 7, 1, 1]
 
-# p, E1, E2, sigma, X2 = poisson_fit(peaks, x, y, p, iter=200)
+p, _ = curve_fit(peaks, x, n, p0)
+
+p, E1, E2, sigma, X2 = poisson_fit(peaks, x, n, p, iter=200)
 
 # print(*np.round(p, 2))
 # print(*np.round(E1, 2))
@@ -197,10 +197,10 @@ p, _ = curve_fit(peaks, x, y, p0)
 # print(*np.round(sigma, 2))
 # print(np.round(X2 / (len(x) - len(p)), 2))
 
-fit.plot(peaks(x, *p0), color="red", ls="dashed", label="Guess")
-fit.plot(peaks(x, *p), color="magenta", label="Fit")
-
-res.errorbar(x, y - peaks(x, *p), np.sqrt(y), color="black", capsize=3, ls="")
+fit.errorbar(x, n, np.sqrt(n), capsize=3, color="black", ls="", label=f"{sum(n)} Events", marker=".")
+fit.plot(x, peaks(x, *p0), color="red", ls="dashed", label="Guess")
+fit.plot(x, peaks(x, *p), color="magenta", label="Fit")
+res.errorbar(x, n - peaks(x, *p), np.sqrt(n), color="black", capsize=3, ls="", marker=".")
 
 fit.set_xticks([])
 res.set_xlabel("AOM Steps")
