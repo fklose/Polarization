@@ -157,11 +157,7 @@ plt.close()
 
 Cuts &= POS_Cut
 
-# Plot final spectrum and fit
-fig = plt.figure(figsize=(6, 4))
-gs = fig.add_gridspec(2, 1, height_ratios=[3, 1])
-fit = fig.add_subplot(gs[0,0])
-res = fig.add_subplot(gs[1,0])
+# Computing the spectrum
 
 # Start at 1 since all 0 counts are removed
 bins = [i for i in range(1, 54)]
@@ -183,14 +179,51 @@ lock = 64.48
 
 x = 2*np.interp(V, AOM_V, AOM_f) + lock
 
-# p0 = [80, 800, x[np.argmax(n)], 9, 1, 1]
+# First we only fit two peaks to the data to determine the location of the 2->2' transition and hence the magnetic field
+p0 = [80, 800, x[np.argmax(n)], 9, 1, 1]
 
+model = lambda x, A, B, x0, h, s, g: peaks(x, A, B, x0, h, s, g)
+
+# Get a better guess using least squares fit
+p, _ = curve_fit(model, x, n, p0)
+# Perform final fit using a poisson fit
+p, E1, E2, sigma, X2 = poisson_fit(model, x, n, p, iter=200)
+
+print("Peaks Fit:")
+print(*np.round(p0, 2))
+print(*np.round(p, 2))
+# print(*np.round(E1, 2))
+# print(*np.round(E2, 2))
+# print(*np.round(sigma, 2))
+# print(np.round(X2 / (len(x) - len(p)), 2))
+
+# Plot spectrum and peaks fit
+fig = plt.figure(figsize=(6, 4))
+fig.suptitle("Peaks Fit")
+gs = fig.add_gridspec(2, 1, height_ratios=[3, 1])
+fit = fig.add_subplot(gs[0,0])
+res = fig.add_subplot(gs[1,0])
+fit.errorbar(x, n, np.sqrt(n), capsize=3, color="black", ls="", label=f"{sum(n)} Events", marker=".")
+fit.plot(x, model(x, *p0), color="red", ls="dashed", label="Guess")
+fit.plot(x, model(x, *p), color="magenta", label="Fit")
+res.errorbar(x, n - model(x, *p), np.sqrt(n), color="black", capsize=3, ls="", marker=".")
+fit.set_xticks([])
+res.set_xlabel("AOM Steps")
+fit.set_ylabel("Counts")
+res.set_ylabel("Counts - Fit")
+fit.legend()
+plt.subplots_adjust(hspace=0, wspace=0)
+plt.show()
+
+# Knowing the location of the 2->2' peak we can fix some parameters
 x0 = 363.61
 x0_err = 0.48
 h = 9.92
 g = 1.1/2
+B = (x0 - p[2]) * (2/3 * 1.399)**(-1)
 
-p0 = [0, 0, 0, 20, 100, 1, -2.5]
+
+p0 = [0, 0, 0, 20, 100, 1, B]
 
 model = lambda x, am2, am1, a0, a1, a2, s, B: F2_pi_sublevels(x, am2, am1, a0, a1, a2, x0, h, s, g, B)
 
@@ -199,16 +232,24 @@ p, _ = curve_fit(model, x, n, p0, bounds=([0, 0, 0, 0, 0, 0, -10], [np.inf, np.i
 # Perform final fit using a poisson fit
 p, E1, E2, sigma, X2 = poisson_fit(model, x, n, p, iter=200)
 
+print("Sublevel Fit")
+print(*np.round(p0, 2))
 print(*np.round(p, 2))
 # print(*np.round(E1, 2))
 # print(*np.round(E2, 2))
 # print(*np.round(sigma, 2))
 # print(np.round(X2 / (len(x) - len(p)), 2))
 
+# Plot spectrum and sublevel fit
+fig = plt.figure(figsize=(6, 4))
+fig.suptitle("Sublevel Fit")
+gs = fig.add_gridspec(2, 1, height_ratios=[3, 1])
+fit = fig.add_subplot(gs[0,0])
+res = fig.add_subplot(gs[1,0])
 fit.errorbar(x, n, np.sqrt(n), capsize=3, color="black", ls="", label=f"{sum(n)} Events", marker=".")
 fit.plot(x, model(x, *p0), color="red", ls="dashed", label="Guess")
 fit.plot(x, model(x, *p), color="magenta", label="Fit")
-# res.errorbar(x, n - model(x, *p), np.sqrt(n), color="black", capsize=3, ls="", marker=".")
+res.errorbar(x, n - model(x, *p), np.sqrt(n), color="black", capsize=3, ls="", marker=".")
 fit.set_xticks([])
 res.set_xlabel("AOM Steps")
 fit.set_ylabel("Counts")
