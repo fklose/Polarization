@@ -5,7 +5,8 @@ from routines.poisson import fit as poisson_fit
 from functions.models import peaks
 from scipy.optimize import curve_fit
 
-root_path = "/home/felix/fklose/Data/ROOT_Files/"
+# root_path = "/home/felix/fklose/Data/ROOT_Files/"
+root_path = "./"
 run_flip = "output03512.root"
 run_norm = "output03514.root"
 
