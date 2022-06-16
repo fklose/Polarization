@@ -23,4 +23,4 @@ def F2_pi_sublevels(x, am2, am1, a0, a1, a2, x0, h, s, g, B):
     F2_ex_2 = 4*a2*voigt(x, x0 + ZeemanShiftF2F2(2, B), s, g)
     F2_ex = F2_ex_m2 + F2_ex_m1 + F2_ex_1 + F2_ex_2    
     
-    return F1_ex + F2_ex_2
+    return F1_ex + F2_ex

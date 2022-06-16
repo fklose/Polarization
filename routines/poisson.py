@@ -13,6 +13,16 @@ def centralDiff(f, x, p, i, eps):
     return (f(x, *left) - f(x, *right)) / (2*p[i] * eps)
 
 
+def altCentralDiff(f, x, p, i, eps):
+    left = np.copy(p)
+    right = np.copy(p)
+    
+    left[i] = left[i] + eps
+    right[i] = right[i] - eps
+    
+    return (f(x, *left) - f(x, *right)) / (2 * eps)
+
+
 def makeVector(f, x, data, p, eps):
     
     M = len(p)
@@ -33,7 +43,7 @@ def makeMatrix(f, x, data, p, eps):
     
     for i in range(M):
         for j in range(M):
-            OUT[i, j] = np.sum(data / (f(x, *p)**2) * centralDiff(f, x, p, i, eps) * centralDiff(f, x, p, j, eps))
+            OUT[i, j] = np.sum(data / (f(x, *p)**2) * altCentralDiff(f, x, p, i, eps) * altCentralDiff(f, x, p, j, eps))
 
     return OUT
 
@@ -104,11 +114,15 @@ def altFit(f, x, y, p0, bounds):
         B_inv = np.linalg.inv(B)
     except np.linalg.LinAlgError:
         B_inv = res.hess_inv
+        print("Use approximated Hessian")
     
     if type(B_inv) == LbfgsInvHessProduct:
-        # Extract main diagonal
+        # Extract full matrix
         B_inv = B_inv.todense()
-        
+    
+    np.printoptions(suppress=True)
+    print(np.round(B_inv, 2))
+    
     E1 = np.zeros(M)
     for i in range(len(p)):
         E1[i] = np.sqrt(B_inv[i, i])
