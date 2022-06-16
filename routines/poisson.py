@@ -4,6 +4,7 @@ from scipy.optimize import LbfgsInvHessProduct
 
 
 def centralDiff(f, x, p, i, eps):
+    
     left = np.copy(p)
     right = np.copy(p)
     
@@ -14,6 +15,9 @@ def centralDiff(f, x, p, i, eps):
 
 
 def altCentralDiff(f, x, p, i, eps):
+    # TODO look for more robust way of taking derivative when p[i] == 0 to incorporate into centralDiff()
+    # I would like to keep a relative step size instead of an absolute which would run into trouble as the
+    # magnitude of the parameters approaches the step size.
     left = np.copy(p)
     right = np.copy(p)
     
@@ -37,6 +41,19 @@ def makeVector(f, x, data, p, eps):
 
 def makeMatrix(f, x, data, p, eps):
     
+    M = len(p)
+    
+    OUT = np.zeros((M, M))
+    
+    for i in range(M):
+        for j in range(M):
+            OUT[i, j] = np.sum(data / (f(x, *p)**2) * centralDiff(f, x, p, i, eps) * centralDiff(f, x, p, j, eps))
+
+    return OUT
+
+
+def makeHessian(f, x, data, p, eps):
+    # TODO This is only here beacause it uses a slightly different method to compute the derivative
     M = len(p)
     
     OUT = np.zeros((M, M))
