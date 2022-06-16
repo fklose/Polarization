@@ -1,5 +1,6 @@
 from scipy.constants import physical_constants
 import numpy as np
+from sympy.physics.quantum.cg import CG
 
 
 def gJ(J, S, L):
@@ -37,6 +38,15 @@ def ZeemanShift_41K_4s5p(F_gs, mF_gs, F_ex, mF_ex, B):
     mu_B = physical_constants["Bohr magneton in Hz/T"][0] * 1e-6 * 1e-4
     
     return ZeemanCoefficient(F_gs, mF_gs, F_ex, mF_ex, J, J, L_gs, L_ex, S, S, I) * mu_B * B
+
+
+def starkShift_AC(Delta, I, F_gs, mF_gs, F_ex, mF_ex):
+    I_sat = 1.71
+    nat_lw = 5.956
+    cg = CG(F_gs, mF_gs, 1, mF_ex - mF_gs, F_ex, mF_ex)
+    cg = float(cg.doit())
+    
+    return nat_lw / 2 * (Delta / nat_lw - np.sqrt((Delta / nat_lw)**2 + I / 2 / I_sat)) * np.abs(cg)**2
 
 
 def NuclearPolarizationF1_41K(F1_m1, F1_0, F1_1):
