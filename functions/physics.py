@@ -1,4 +1,4 @@
-from scipy.constants import physical_constants, h
+from scipy.constants import physical_constants
 
 
 def gJ(J, S, L):

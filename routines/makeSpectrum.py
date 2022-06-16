@@ -156,6 +156,7 @@ def makeSpectrum(fname, data):
 
     # Calibrate x-axis
     AOM_V, AOM_f = np.loadtxt("./AOM Calibrations/M1212-aQ50-2/calibration.csv", unpack=True, delimiter=",")
+    # AOM_V, AOM_f = np.loadtxt("./AOM Calibrations/Test Calibrations/linear.csv", unpack=True, delimiter=",")
 
     V_low = 7.63 # [V]
     V_high = 9.58 # [V]
