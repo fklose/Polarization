@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from functions.physics import NuclearPolarPolarizationF2_41K
 from routines.load import load
-from routines.poisson import fit as poisson_fit
-from routines.poisson import altFit as alt_poisson_fit
+from routines.poisson import fit_physica as poisson_fit
+from routines.poisson import fit as alt_poisson_fit
 from functions.models import peaks, F2_pi_sublevels
 from scipy.optimize import curve_fit
 

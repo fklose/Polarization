@@ -5,26 +5,24 @@ from scipy.optimize import LbfgsInvHessProduct
 
 def centralDiff(f, x, p, i, eps):
     
+    tol = 1e-16
+    
     left = np.copy(p)
     right = np.copy(p)
     
-    left[i] = left[i] * (1 + eps)
-    right[i] = right[i] * (1 - eps)
-    
-    return (f(x, *left) - f(x, *right)) / (2*p[i] * eps)
-
-
-def altCentralDiff(f, x, p, i, eps):
-    # TODO look for more robust way of taking derivative when p[i] == 0 to incorporate into centralDiff()
-    # I would like to keep a relative step size instead of an absolute which would run into trouble as the
-    # magnitude of the parameters approaches the step size.
-    left = np.copy(p)
-    right = np.copy(p)
-    
-    left[i] = left[i] + eps
-    right[i] = right[i] - eps
-    
-    return (f(x, *left) - f(x, *right)) / (2 * eps)
+    if -tol <= p[i] and p[i] <= tol:
+        # When p[i] is close to zero cannot use relative stepsize as p[i]*eps = 0 and hence the result will be infinite
+        # Instead use a very small finite step size
+        # This is not in the PHYSICA manual
+        left[i] = left[i] + tol
+        right[i] = right[i] - tol
+        
+        return (f(x, *left) - f(x, *right)) / (2 * tol)
+    else:
+        left[i] = left[i] * (1 + eps)
+        right[i] = right[i] * (1 - eps)
+        
+        return (f(x, *left) - f(x, *right)) / (2*p[i] * eps)
 
 
 def makeVector(f, x, data, p, eps):
@@ -39,7 +37,7 @@ def makeVector(f, x, data, p, eps):
     return OUT
 
 
-def makeMatrix(f, x, data, p, eps):
+def makeHessian(f, x, data, p, eps):
     
     M = len(p)
     
@@ -52,20 +50,8 @@ def makeMatrix(f, x, data, p, eps):
     return OUT
 
 
-def makeHessian(f, x, data, p, eps):
-    # TODO This is only here beacause it uses a slightly different method to compute the derivative
-    M = len(p)
-    
-    OUT = np.zeros((M, M))
-    
-    for i in range(M):
-        for j in range(M):
-            OUT[i, j] = np.sum(data / (f(x, *p)**2) * altCentralDiff(f, x, p, i, eps) * altCentralDiff(f, x, p, j, eps))
-
-    return OUT
-
-
-def fit(f, x, y, p0, iter=200):
+def fit_physica(f, x, y, p0, iter=200):
+    # Follows the method presented in the PHYSICA manual
     
     eps = 0.00001
     
@@ -77,7 +63,7 @@ def fit(f, x, y, p0, iter=200):
     p = np.copy(p0)
     
     for _ in range(iter):
-        B = makeMatrix(f, x, y, p, eps)
+        B = makeHessian(f, x, y, p, eps)
         b = makeVector(f, x, y, p, eps)
         dp = np.linalg.solve(B, b)
         p += dp
@@ -109,8 +95,8 @@ def fit(f, x, y, p0, iter=200):
     return p, E1, E2, sigma, X2
 
 
-def altFit(f, x, y, p0, bounds):
-    # Instead of using method outlined in PHYSICA manual use scipy.minimize
+def fit(f, x, y, p0, bounds):
+    # Instead of using method outlined in PHYSICA manual use scipy.minimize this is more robust
     
     # Define log-likelihood function
     LL = lambda p : - np.sum(y * np.log(f(x, *p)) - f(x, *p))
@@ -127,7 +113,7 @@ def altFit(f, x, y, p0, bounds):
     
     # Try and compute the Hessian and its inverse by hand
     try:
-        B = makeMatrix(f, x, y, p, 0.00001)
+        B = makeHessian(f, x, y, p, 0.00001)
         B_inv = np.linalg.inv(B)
     except np.linalg.LinAlgError:
         B_inv = res.hess_inv
