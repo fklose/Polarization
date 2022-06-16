@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from routines.load import load
 from routines.poisson import fit as poisson_fit
+from routines.poisson import altFit as alt_poisson_fit
 from functions.models import peaks, F2_pi_sublevels
 from scipy.optimize import curve_fit
 
@@ -185,9 +186,10 @@ p0 = [80, 800, x[np.argmax(n)], 9, 1, 1]
 model = lambda x, A, B, x0, h, s, g: peaks(x, A, B, x0, h, s, g)
 
 # Get a better guess using least squares fit
-p, _ = curve_fit(model, x, n, p0)
+# p, _ = curve_fit(model, x, n, p0)
 # Perform final fit using a poisson fit
-p, E1, E2, sigma, X2 = poisson_fit(model, x, n, p, iter=200)
+# p, E1, E2, sigma, X2 = poisson_fit(model, x, n, p, iter=200)
+p, E1, E2, sigma, X2 = alt_poisson_fit(model, x, n, p0, bounds=[(0, np.inf)]*6)
 
 print("Peaks Fit:")
 print(*np.round(p0, 2))
@@ -222,15 +224,16 @@ h = 9.92
 g = 1.1/2
 B = (x0 - p[2]) * (2/3 * 1.399)**(-1)
 
-
 p0 = [0, 0, 0, 20, 100, 1, B]
 
 model = lambda x, am2, am1, a0, a1, a2, s, B: F2_pi_sublevels(x, am2, am1, a0, a1, a2, x0, h, s, g, B)
 
 # Get a better guess using least squares fit
-p, _ = curve_fit(model, x, n, p0, bounds=([0, 0, 0, 0, 0, 0, -10], [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, 10]))
+p1, _ = curve_fit(model, x, n, p0, bounds=([0, 0, 0, 0, 0, 0, -10], [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, 10]))
+p = p1
 # Perform final fit using a poisson fit
-p, E1, E2, sigma, X2 = poisson_fit(model, x, n, p, iter=200)
+# p, E1, E2, sigma, X2 = poisson_fit(model, x, n, p, iter=200)
+p, E1, E2, sigma, X2 = alt_poisson_fit(model, x, n, p, bounds=[(0, np.inf)]*7)
 
 print("Sublevel Fit")
 print(*np.round(p0, 2))
@@ -248,6 +251,7 @@ fit = fig.add_subplot(gs[0,0])
 res = fig.add_subplot(gs[1,0])
 fit.errorbar(x, n, np.sqrt(n), capsize=3, color="black", ls="", label=f"{sum(n)} Events", marker=".")
 fit.plot(x, model(x, *p0), color="red", ls="dashed", label="Guess")
+fit.plot(x, model(x, *p1), color="red", ls="dashed", label="Better Guess")
 fit.plot(x, model(x, *p), color="magenta", label="Fit")
 res.errorbar(x, n - model(x, *p), np.sqrt(n), color="black", capsize=3, ls="", marker=".")
 fit.set_xticks([])
