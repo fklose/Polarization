@@ -40,9 +40,11 @@ def ZeemanShift_41K_4s5p(F_gs, mF_gs, F_ex, mF_ex, B):
     return ZeemanCoefficient(F_gs, mF_gs, F_ex, mF_ex, J, J, L_gs, L_ex, S, S, I) * mu_B * B
 
 
-def starkShift_AC(Delta, I, F_gs, mF_gs, F_ex, mF_ex):
+def starkShift_AC_4s5p(Delta, I, F_gs, mF_gs, F_ex, mF_ex):
+    
     I_sat = 1.71
     nat_lw = 5.956
+    
     cg = CG(F_gs, mF_gs, 1, mF_ex - mF_gs, F_ex, mF_ex)
     cg = float(cg.doit())
     
