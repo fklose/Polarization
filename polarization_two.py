@@ -1,13 +1,10 @@
-from subprocess import run
 import numpy as np
 import matplotlib.pyplot as plt
 from functions.physics import NuclearPolarizationErrorF2_41K, NuclearPolarizationF2_41K
 from routines.makeSpectrum import makeSpectrum
 from routines.load import load
-from routines.poisson import fit_physica as poisson_fit
 from routines.poisson import fit as alt_poisson_fit
 from functions.models import peaks, F2_pi_sublevels
-from scipy.optimize import curve_fit
 from scipy.constants import physical_constants
 from tabulate import tabulate
 
@@ -31,7 +28,6 @@ x_flip, y_flip = makeSpectrum(run_flip, data_flip)
 x_norm, y_norm = makeSpectrum(run_norm, data_norm)
 
 # Fit two peaks to norm and flip data to obtain frequency of 2->2' transition and corresponding B-field
-
 model = lambda x, A, B, x0, h, s, g: peaks(x, A, B, x0, h, s, g)
 
 p0_flip = [80, 800, x_flip[np.argmax(y_flip)], 9, 1, 1]
