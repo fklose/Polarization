@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from functions.physics import NuclearPolarPolarizationF2_41K
+from functions.physics import NuclearPolarizationF2_41K
 from routines.makeSpectrum import makeSpectrum
 from routines.load import load
 from routines.poisson import fit_physica as poisson_fit
@@ -85,7 +85,7 @@ print("E2: ", *np.round(E2, 2))
 print("sigma: ", *np.round(sigma, 2))
 print("X2: ", np.round(X2 / (len(x) - len(p)), 2))
 
-print(NuclearPolarPolarizationF2_41K(*p[0:5]))
+print(NuclearPolarizationF2_41K(*p[0:5]))
 
 # Plot spectrum and sublevel fit
 fig = plt.figure(figsize=(6, 4))

@@ -1,4 +1,5 @@
 from scipy.constants import physical_constants
+import numpy as np
 
 
 def gJ(J, S, L):
@@ -42,20 +43,37 @@ def NuclearPolarizationF1_41K(F1_m1, F1_0, F1_1):
     
     I = 3/2
     
-    total = F1_m1 + F1_0, F1_1
+    total = np.abs(F1_m1) + np.abs(F1_0), np.abs(F1_1)
     
     return 1/I * 5/4 * (F1_1 - F1_m1) / total
 
 
-def NuclearPolarPolarizationF2_41K(F2_m2, F2_m1, F2_0, F2_1, F2_2):
+def NuclearPolarizationF2_41K(F2_m2, F2_m1, F2_0, F2_1, F2_2):
     
     I = 3/2
     
-    total = F2_m2 + F2_m1 + F2_0 + F2_1 + F2_2
+    total = np.abs(F2_m2) + np.abs(F2_m1) + np.abs(F2_0) + np.abs(F2_1) + np.abs(F2_2)
     
     return 1/I * 3/4 * (2*F2_2 + F2_1 - F2_m1 - 2*F2_m2) / total
 
 
+def NuclearPolarizationErrorF2_41K(F2_m2, F2_m1, F2_0, F2_1, F2_2, F2_m2_err, F2_m1_err, F2_0_err, F2_1_err, F2_2_err):
+    
+    I = 3/2
+    mF = np.arange(-2, 3, 1)
+    
+    F2 = np.abs(np.array([F2_m2, F2_m1, F2_0, F2_1, F2_2]))
+    F2_err = np.abs(np.array([F2_m2_err, F2_m1_err, F2_0_err, F2_1_err, F2_2_err]))
+    
+    total = np.sum(F2)
+    total_err = np.sqrt(np.sum(F2_err**2))
+    
+    pops = F2 / total
+    pops_err = pops * np.sqrt((F2_err / F2)**2 + (total_err / total)**2)
+    
+    return I * (3/4) * np.sqrt(np.sum((mF * pops_err)**2))
+
+
 def NuclearPolarization_41K(F1_m1, F1_0, F1_1, F2_m2, F2_m1, F2_0, F2_1, F2_2):
     
-    return NuclearPolarizationF1_41K(F1_m1, F1_0, F1_1) + NuclearPolarPolarizationF2_41K(F2_m2, F2_m1, F2_0, F2_1, F2_2)
+    return NuclearPolarizationF1_41K(F1_m1, F1_0, F1_1) + NuclearPolarizationF2_41K(F2_m2, F2_m1, F2_0, F2_1, F2_2)

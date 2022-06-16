@@ -12,6 +12,12 @@ def F2_pi_sublevels(x, am2, am1, a0, a1, a2, x0, h, s, g, B):
     ZeemanShiftF2F1 = lambda mF, B: ZeemanShift_41K_4s5p(2, mF, 1, mF, B)
     ZeemanShiftF2F2 = lambda mF, B: ZeemanShift_41K_4s5p(2, mF, 2, mF, B)
     
+    am2 = np.abs(am2)
+    am1 = np.abs(am1)
+    a0 = np.abs(a0)
+    a1 = np.abs(a1)
+    a2 = np.abs(a2)
+    
     F1_ex_m1 = 3*am1*voigt(x, x0 - h + ZeemanShiftF2F1(-1, B), s, g)
     F1_ex_0 = 4*a0*voigt(x, x0 - h + ZeemanShiftF2F1(0, B), s, g)
     F1_ex_1 = 3*a1*voigt(x, x0 - h + ZeemanShiftF2F1(1, B), s, g)

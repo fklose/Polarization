@@ -1,6 +1,7 @@
+from subprocess import run
 import numpy as np
 import matplotlib.pyplot as plt
-from functions.physics import NuclearPolarPolarizationF2_41K
+from functions.physics import NuclearPolarizationErrorF2_41K, NuclearPolarizationF2_41K
 from routines.makeSpectrum import makeSpectrum
 from routines.load import load
 from routines.poisson import fit_physica as poisson_fit
@@ -8,6 +9,7 @@ from routines.poisson import fit as alt_poisson_fit
 from functions.models import peaks, F2_pi_sublevels
 from scipy.optimize import curve_fit
 from scipy.constants import physical_constants
+from tabulate import tabulate
 
 # Define plot styles
 flip_ebar = {"capsize":3, "ls":"", "marker":".", "label":"$OP_{Flip}$"}
@@ -83,20 +85,29 @@ model = lambda x, am2, am1, a0, a1, a2, s: F2_pi_sublevels(x, am2, am1, a0, a1, 
 
 # Fit populations
 p0_flip = [10, 10, 10, 10, 10, 1]
-p_flip, _, _, _, X2_flip = alt_poisson_fit(model, x_flip, y_flip, p0_flip, bounds=[(0, np.inf)]*5 + [(0.01, np.inf)])
+p_flip, _, _, err_flip, X2_flip = alt_poisson_fit(model, x_flip, y_flip, p0_flip, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)])
 
 p0_norm = [10, 10, 10, 10, 10, 1]
-p_norm, _, _, _, X2_norm = alt_poisson_fit(model, x_norm, y_norm, p0_norm, bounds=[(0, np.inf)]*5 + [(0.01, np.inf)])
+p_norm, _, _, err_norm, X2_norm = alt_poisson_fit(model, x_norm, y_norm, p0_norm, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)])
+
+# Enforce positive sign on parameters
+p_flip = np.abs(p_flip)
+p_norm = np.abs(p_norm)
 
 # Print nuclear polarization and population levels
-pnames = ["am2", "am1", "a0", "a1", "a2"]
-print("\tFlip\tNorm")
-for name, flip, norm in zip(pnames, np.round(p_flip[:-1], 2), np.round(p_norm[:-1])):
-    print(f"{name}\t{flip}\t{norm}")
+pnames = ["am2", "am1", "a0", "a1", "a2", "s", "P"]
 
-print(f"P\
-\t{np.round(NuclearPolarPolarizationF2_41K(p_flip[0], p_flip[1], p_flip[2], p_flip[3], p_flip[4]), 2)}\
-\t{np.round(NuclearPolarPolarizationF2_41K(p_norm[0], p_norm[1], p_norm[2], p_norm[3], p_norm[4]), 2)}")
+p_flip_list = list(p_flip)
+err_flip_list = list(err_flip)
+p_norm_list = list(p_norm)
+err_norm_list = list(err_norm)
+
+p_flip_list.append(np.round(NuclearPolarizationF2_41K(p_flip[0], p_flip[1], p_flip[2], p_flip[3], p_flip[4]), 4))
+err_flip_list.append(np.round(NuclearPolarizationErrorF2_41K(p_flip[0], p_flip[1], p_flip[2], p_flip[3], p_flip[4], err_flip[0], err_flip[1], err_flip[2], err_flip[3], err_flip[4]), 2))
+p_norm_list.append(np.round(NuclearPolarizationF2_41K(p_norm[0], p_norm[1], p_norm[2], p_norm[3], p_norm[4]), 2))
+err_norm_list.append(np.round(NuclearPolarizationErrorF2_41K(p_norm[0], p_norm[1], p_norm[2], p_norm[3], p_norm[4], err_norm[0], err_norm[1], err_norm[2], err_norm[3], err_norm[4]), 2))
+
+print(tabulate(zip(pnames, np.round(p_flip_list, 4), np.round(err_flip_list, 4), np.round(p_norm_list, 4), np.round(err_norm_list, 4)), headers=["Name", "Flip", "Error", "Norm", "Error"]))
 
 # Plot fits and spectra on the same plot
 fig = plt.figure(figsize=(6, 4))
