@@ -40,15 +40,28 @@ def ZeemanShift_41K_4s5p(F_gs, mF_gs, F_ex, mF_ex, B):
     return ZeemanCoefficient(F_gs, mF_gs, F_ex, mF_ex, J, J, L_gs, L_ex, S, S, I) * mu_B * B
 
 
-def starkShift_AC_4s5p(Delta, I, F_gs, mF_gs, F_ex, mF_ex):
+def starkShift_AC_41K_4s4p(Delta, I, F_gs, mF_gs, F_ex, mF_ex):
     
-    I_sat = 1.71
-    nat_lw = 5.956
+    # 41K, 4s -> 4p transition see (https://arxiv.org/pdf/1506.06651.pdf)
+    I_sat = 1.71 # Saturation intensity [mW/cm^2]
+    gamma = 2*np.pi * 5.956 # Natural linewidth [MHz]
     
     cg = CG(F_gs, mF_gs, 1, mF_ex - mF_gs, F_ex, mF_ex)
     cg = float(cg.doit())
     
-    return nat_lw / 2 * (Delta / nat_lw - np.sqrt((Delta / nat_lw)**2 + I / 2 / I_sat)) * np.abs(cg)**2
+    return gamma / 2 * (Delta / gamma - np.sqrt((Delta / gamma)**2 + I / 2 / I_sat)) * np.abs(cg)**2
+
+
+def starkShift_AC_41K_4s5p(Delta, I, F_gs, mF_gs, F_ex, mF_ex):
+    
+    # 41K, 4s -> 4p transition see (https://arxiv.org/pdf/1506.06651.pdf)
+    I_sat = 58.8 # Saturation intensity [mW/cm^2]
+    gamma = 2*np.pi * 170.3e-3 # Natural linewidth [MHz]
+    
+    cg = CG(F_gs, mF_gs, 1, mF_ex - mF_gs, F_ex, mF_ex)
+    cg = float(cg.doit())
+    
+    return gamma / 2 * (Delta / gamma - np.sqrt((Delta / gamma)**2 + I / 2 / I_sat)) * np.abs(cg)**2
 
 
 def NuclearPolarizationF1_41K(F1_m1, F1_0, F1_1):
