@@ -4,7 +4,7 @@ from functions.physics import NuclearPolarizationErrorF2_41K, NuclearPolarizatio
 from routines.makeSpectrum import makeSpectrum
 from routines.load import load
 from routines.poisson import fit as alt_poisson_fit
-from functions.models import peaks, F2_pi_sublevels
+from functions.models import F2_pi_sublevels_stark, peaks, F2_pi_sublevels
 from scipy.constants import physical_constants
 from tabulate import tabulate
 
@@ -76,15 +76,24 @@ B = - (np.abs(p_flip[2] - p_norm[2]) / 2) * (3/2) / mu_B
 h = 9.94
 g = 1.1
 
+# For fitting with an AC stark shift
+I = 0.15 # OP Laser intensity [mW/cm^2]
+delta = 1 # Detuning of OP Laser from 4s->4p transition [MHz]
+
 # We now move towards fitting the sublevel populations by defining the model
 model = lambda x, am2, am1, a0, a1, a2, s: F2_pi_sublevels(x, am2, am1, a0, a1, a2, x0, h, s, g/2, B)
+# model = lambda x, am2, am1, a0, a1, a2, s, I: F2_pi_sublevels_stark(x, am2, am1, a0, a1, a2, x0, h, s, g/2, B, delta, I)
 
 # Fit populations
 p0_flip = [10, 10, 10, 10, 10, 1]
+# p0_flip = [100, 100, 100, 100, 100, 1, 0]
 p_flip, _, _, err_flip, X2_flip = alt_poisson_fit(model, x_flip, y_flip, p0_flip, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)])
+# p_flip, _, _, err_flip, X2_flip = alt_poisson_fit(model, x_flip, y_flip, p0_flip, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)] + [(0.001, np.inf)])
 
 p0_norm = [10, 10, 10, 10, 10, 1]
+# p0_norm = [100, 100, 100, 100, 100, 1, 0]
 p_norm, _, _, err_norm, X2_norm = alt_poisson_fit(model, x_norm, y_norm, p0_norm, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)])
+# p_norm, _, _, err_norm, X2_norm = alt_poisson_fit(model, x_norm, y_norm, p0_norm, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)] + [(0.001, np.inf)])
 
 # Enforce positive sign on parameters
 p_flip = np.abs(p_flip)
@@ -92,6 +101,7 @@ p_norm = np.abs(p_norm)
 
 # Print nuclear polarization and population levels
 pnames = ["am2", "am1", "a0", "a1", "a2", "s", "P"]
+# pnames = ["am2", "am1", "a0", "a1", "a2", "s", "delta", "P"]
 
 p_flip_list = list(p_flip)
 err_flip_list = list(err_flip)
