@@ -82,18 +82,18 @@ delta = 1 # Detuning of OP Laser from 4s->4p transition [MHz]
 
 # We now move towards fitting the sublevel populations by defining the model
 model = lambda x, am2, am1, a0, a1, a2, s: F2_pi_sublevels(x, am2, am1, a0, a1, a2, x0, h, s, g/2, B)
-# model = lambda x, am2, am1, a0, a1, a2, s, I: F2_pi_sublevels_stark(x, am2, am1, a0, a1, a2, x0, h, s, g/2, B, delta, I)
+# model = lambda x, am2, am1, a0, a1, a2, s, delta, I: F2_pi_sublevels_stark(x, am2, am1, a0, a1, a2, x0, h, s, g/2, B, delta, I)
 
 # Fit populations
 p0_flip = [10, 10, 10, 10, 10, 1]
-# p0_flip = [100, 100, 100, 100, 100, 1, 0]
+# p0_flip = [10, 10, 10, 10, 10, 1, 0, 0]
 p_flip, _, _, err_flip, X2_flip = alt_poisson_fit(model, x_flip, y_flip, p0_flip, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)])
-# p_flip, _, _, err_flip, X2_flip = alt_poisson_fit(model, x_flip, y_flip, p0_flip, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)] + [(0.001, np.inf)])
+# p_flip, _, _, err_flip, X2_flip = alt_poisson_fit(model, x_flip, y_flip, p0_flip, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)] + [(0.001, np.inf)]*2)
 
 p0_norm = [10, 10, 10, 10, 10, 1]
-# p0_norm = [100, 100, 100, 100, 100, 1, 0]
+# p0_norm = [10, 10, 10, 10, 10, 1, 0, 0]
 p_norm, _, _, err_norm, X2_norm = alt_poisson_fit(model, x_norm, y_norm, p0_norm, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)])
-# p_norm, _, _, err_norm, X2_norm = alt_poisson_fit(model, x_norm, y_norm, p0_norm, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)] + [(0.001, np.inf)])
+# p_norm, _, _, err_norm, X2_norm = alt_poisson_fit(model, x_norm, y_norm, p0_norm, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)] + [(0.001, np.inf)]*2)
 
 # Enforce positive sign on parameters
 p_flip = np.abs(p_flip)
@@ -101,7 +101,7 @@ p_norm = np.abs(p_norm)
 
 # Print nuclear polarization and population levels
 pnames = ["am2", "am1", "a0", "a1", "a2", "s", "P"]
-# pnames = ["am2", "am1", "a0", "a1", "a2", "s", "delta", "P"]
+# pnames = ["am2", "am1", "a0", "a1", "a2", "s", "delta", "I", "P"]
 
 p_flip_list = list(p_flip)
 err_flip_list = list(err_flip)
@@ -116,10 +116,16 @@ err_norm_list.append(np.round(NuclearPolarizationErrorF2_41K(p_norm[0], p_norm[1
 print(tabulate(zip(pnames, np.round(p_flip_list, 4), np.round(err_flip_list, 4), np.round(p_norm_list, 4), np.round(err_norm_list, 4)), headers=["Name", "Flip", "Error", "Norm", "Error"]))
 
 # Plot fits and spectra on the same plot
-fig = plt.figure(figsize=(6, 4))
-gs = fig.add_gridspec(2, 1, height_ratios=[3, 1])
+fig = plt.figure(figsize=(18, 4))
+gs = fig.add_gridspec(2, 3, height_ratios=[3, 1])
 fits = fig.add_subplot(gs[0, 0])
 ress = fig.add_subplot(gs[1, 0])
+
+fit_flip = fig.add_subplot(gs[0, 1])
+ress_flip = fig.add_subplot(gs[1, 1])
+
+fit_norm = fig.add_subplot(gs[0, 2])
+ress_norm = fig.add_subplot(gs[1, 2])
 
 # Plot OP_flip
 fits.errorbar(x_flip, y_flip, np.sqrt(y_flip), **flip_style, **flip_ebar)
@@ -129,6 +135,13 @@ fits.plot(x_flip, model(x_flip, *p0_flip), **flip_style, **guess_style)
 res_flip = y_flip - model(x_flip, *p_flip)
 ress.errorbar(x_flip, res_flip, np.sqrt(y_flip), **flip_style, **flip_ebar)
 
+fit_flip.errorbar(x_flip, y_flip, np.sqrt(y_flip), **flip_style, **flip_ebar)
+fit_flip.plot(x_flip, model(x_flip, *p_flip), **flip_style)
+fit_flip.plot(x_flip, model(x_flip, *p0_flip), **flip_style, **guess_style)
+
+res_flip = y_flip - model(x_flip, *p_flip)
+ress_flip.errorbar(x_flip, res_flip, np.sqrt(y_flip), **flip_style, **flip_ebar)
+
 # Plot OP_norm
 fits.errorbar(x_norm, y_norm, np.sqrt(y_norm), **norm_style, **norm_ebar)
 fits.plot(x_norm, model(x_norm, *p_norm), **norm_style)
@@ -136,6 +149,13 @@ fits.plot(x_norm, model(x_norm, *p0_norm), **norm_style, **guess_style)
 
 res_norm = y_norm - model(x_norm, *p_norm)
 ress.errorbar(x_norm, res_norm, np.sqrt(y_norm), **norm_style, **norm_ebar)
+
+fit_norm.errorbar(x_norm, y_norm, np.sqrt(y_norm), **norm_style, **norm_ebar)
+fit_norm.plot(x_norm, model(x_norm, *p_norm), **norm_style)
+fit_norm.plot(x_norm, model(x_norm, *p0_norm), **norm_style, **guess_style)
+
+res_norm = y_norm - model(x_norm, *p_norm)
+ress_norm.errorbar(x_norm, res_norm, np.sqrt(y_norm), **norm_style, **norm_ebar)
 
 # General plot stuff
 fits.set_xticks([])
@@ -150,5 +170,5 @@ flip_stats = "$\\chi^2_{Flip}$: " + f"{np.round(X2_flip / (len(y_flip) - len(p_f
 norm_stats = "$\\chi^2_{Norm}$: " + f"{np.round(X2_norm / (len(y_norm) - len(p_norm)), 2)}"
 fig.suptitle(" ; ".join([title, flip_stats, norm_stats]))
 
-fig.subplots_adjust(hspace=0, wspace=0)
+fig.subplots_adjust(hspace=0, wspace=0.1)
 plt.show()
