@@ -54,7 +54,7 @@ def starkShift_AC_41K_4s4p(Delta, I, F_gs, mF_gs, F_ex, mF_ex):
 
 def starkShift_AC_41K_4s5p(Delta, I, F_gs, mF_gs, F_ex, mF_ex):
     
-    # 41K, 4s -> 4p transition see (https://arxiv.org/pdf/1506.06651.pdf)
+    # 41K, 4s -> 5p transition see (https://arxiv.org/pdf/1506.06651.pdf)
     I_sat = 58.8 # Saturation intensity [mW/cm^2]
     gamma = 2*np.pi * 170.3e-3 # Natural linewidth [MHz]
     
