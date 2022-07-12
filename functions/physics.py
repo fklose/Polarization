@@ -96,7 +96,7 @@ def NuclearPolarizationErrorF2_41K(F2_m2, F2_m1, F2_0, F2_1, F2_2, F2_m2_err, F2
     pops = F2 / total
     pops_err = pops * np.sqrt((F2_err / F2)**2 + (total_err / total)**2)
     
-    return I * (3/4) * np.sqrt(np.sum((mF * pops_err)**2))
+    return 1/I * (3/4) * np.sqrt(np.sum((mF * pops_err)**2))
 
 
 def NuclearPolarization_41K(F1_m1, F1_0, F1_1, F2_m2, F2_m1, F2_0, F2_1, F2_2):

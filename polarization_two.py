@@ -170,5 +170,5 @@ flip_stats = "$\\chi^2_{Flip}$: " + f"{np.round(X2_flip / (len(y_flip) - len(p_f
 norm_stats = "$\\chi^2_{Norm}$: " + f"{np.round(X2_norm / (len(y_norm) - len(p_norm)), 2)}"
 fig.suptitle(" ; ".join([title, flip_stats, norm_stats]))
 
-fig.subplots_adjust(hspace=0, wspace=0.1)
+fig.subplots_adjust(hspace=0, wspace=0.1, right=0.95, left=0.05)
 plt.show()
