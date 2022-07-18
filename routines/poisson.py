@@ -117,15 +117,8 @@ def fit(f, x, y, p0, bounds):
         B_inv = np.linalg.inv(B)
     except np.linalg.LinAlgError:
         B_inv = res.hess_inv
-        # print("Use approximated Hessian")
-    
-    if type(B_inv) == LbfgsInvHessProduct:
-        # Extract full matrix
         B_inv = B_inv.todense()
-    
-    # np.printoptions(suppress=True)
-    # print(np.round(B_inv, 2))
-    
+        
     E1 = np.zeros(M)
     for i in range(len(p)):
         E1[i] = np.sqrt(B_inv[i, i])

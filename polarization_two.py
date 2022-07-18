@@ -3,10 +3,11 @@ import matplotlib.pyplot as plt
 from functions.physics import NuclearPolarizationErrorF2_41K, NuclearPolarizationF2_41K
 from routines.makeSpectrum import makeSpectrum
 from routines.load import load
-from routines.poisson import fit as alt_poisson_fit
-from functions.models import F2_pi_sublevels_stark, peaks, F2_pi_sublevels
+from routines.poisson import fit
+from functions.models import peaks, F2_pi_sublevels
 from scipy.constants import physical_constants
 from tabulate import tabulate
+from scipy.optimize import curve_fit
 
 # Define plot styles
 flip_ebar = {"capsize":3, "ls":"", "marker":".", "label":"$OP_{Flip}$"}
@@ -31,10 +32,10 @@ x_norm, y_norm = makeSpectrum(run_norm, data_norm)
 model = lambda x, A, B, x0, h, s, g: peaks(x, A, B, x0, h, s, g)
 
 p0_flip = [80, 800, x_flip[np.argmax(y_flip)], 9, 1, 1]
-p_flip, _, _, _, _ = alt_poisson_fit(model, x_flip, y_flip, p0_flip, bounds=[(0, np.inf)]*6)
+p_flip, _, _, _, _ = fit(model, x_flip, y_flip, p0_flip, bounds=[(0, np.inf)]*6)
 
 p0_norm = [80, 800, x_norm[np.argmax(y_norm)], 9, 1, 1]
-p_norm, _, _, _, _ = alt_poisson_fit(model, x_norm, y_norm, p0_norm, bounds=[(0, np.inf)]*6)
+p_norm, _, _, _, _ = fit(model, x_norm, y_norm, p0_norm, bounds=[(0, np.inf)]*6)
 
 # Plot fits and spectra on the same plot
 fig = plt.figure(figsize=(6, 4))
@@ -76,24 +77,17 @@ B = - (np.abs(p_flip[2] - p_norm[2]) / 2) * (3/2) / mu_B
 h = 9.94
 g = 1.1
 
-# For fitting with an AC stark shift
-I = 0.15 # OP Laser intensity [mW/cm^2]
-delta = 1 # Detuning of OP Laser from 4s->4p transition [MHz]
-
 # We now move towards fitting the sublevel populations by defining the model
 model = lambda x, am2, am1, a0, a1, a2, s: F2_pi_sublevels(x, am2, am1, a0, a1, a2, x0, h, s, g/2, B)
-# model = lambda x, am2, am1, a0, a1, a2, s, delta, I: F2_pi_sublevels_stark(x, am2, am1, a0, a1, a2, x0, h, s, g/2, B, delta, I)
 
 # Fit populations
-p0_flip = [10, 10, 10, 10, 10, 1]
-# p0_flip = [10, 10, 10, 10, 10, 1, 0, 0]
-p_flip, _, _, err_flip, X2_flip = alt_poisson_fit(model, x_flip, y_flip, p0_flip, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)])
-# p_flip, _, _, err_flip, X2_flip = alt_poisson_fit(model, x_flip, y_flip, p0_flip, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)] + [(0.001, np.inf)]*2)
+p0_flip = [1, 1, 1, 1, 1, 1]
+p0_flip, _ = curve_fit(model, x_flip, y_flip, p0=p0_flip)
+p_flip, _, _, err_flip, X2_flip = fit(model, x_flip, y_flip, p0_flip, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)])
 
-p0_norm = [10, 10, 10, 10, 10, 1]
-# p0_norm = [10, 10, 10, 10, 10, 1, 0, 0]
-p_norm, _, _, err_norm, X2_norm = alt_poisson_fit(model, x_norm, y_norm, p0_norm, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)])
-# p_norm, _, _, err_norm, X2_norm = alt_poisson_fit(model, x_norm, y_norm, p0_norm, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)] + [(0.001, np.inf)]*2)
+p0_norm = [1, 1, 1, 1, 1, 1]
+p0_norm, _ = curve_fit(model, x_norm, y_norm, p0=p0_norm)
+p_norm, _, _, err_norm, X2_norm = fit(model, x_norm, y_norm, p0_norm, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)])
 
 # Enforce positive sign on parameters
 p_flip = np.abs(p_flip)
@@ -101,7 +95,6 @@ p_norm = np.abs(p_norm)
 
 # Print nuclear polarization and population levels
 pnames = ["am2", "am1", "a0", "a1", "a2", "s", "P"]
-# pnames = ["am2", "am1", "a0", "a1", "a2", "s", "delta", "I", "P"]
 
 p_flip_list = list(p_flip)
 err_flip_list = list(err_flip)

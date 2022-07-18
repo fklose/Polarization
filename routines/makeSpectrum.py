@@ -156,13 +156,15 @@ def makeSpectrum(fname, data):
 
     # Calibrate x-axis
     AOM_V, AOM_f = np.loadtxt("./AOM Calibrations/M1212-aQ50-2/calibration.csv", unpack=True, delimiter=",")
+    # AOM_V, AOM_f = np.loadtxt("./AOM Calibrations/M1212-aQ50-2/calibration_upsweep.csv", unpack=True)
+    # AOM_V_down, AOM_f_down = np.loadtxt("./AOM Calibrations/M1212-aQ50-2/calibration - 18 Jul 2022.csv", unpack=True)
     # AOM_V, AOM_f = np.loadtxt("./AOM Calibrations/Test Calibrations/linear.csv", unpack=True, delimiter=",")
 
     V_low = 7.63 # [V]
     V_high = 9.58 # [V]
     dV = (V_high - V_low) / 52
 
-    # Compute programmed AOM voltage steps
+    # Compute programmed AOM voltage steps taking care to not include the 0th bin
     V = np.array([i * dV for i in range(53)])[1:] + V_low
 
     lock = 64.48
