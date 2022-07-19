@@ -114,6 +114,7 @@ def fit(f, x, y, p0, bounds):
     # Try and compute the Hessian and its inverse by hand
     try:
         B = makeHessian(f, x, y, p, 0.00001)
+        # B = makeHessian(f, x, y, p, 1e-10) # This makes error a lot better?
         B_inv = np.linalg.inv(B)
     except np.linalg.LinAlgError:
         B_inv = res.hess_inv

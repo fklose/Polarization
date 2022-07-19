@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from functions.physics import NuclearPolarizationErrorF2_41K, NuclearPolarizationF2_41K
+from functions.physics import NuclearPolarizationF2_41K, NuclearPolarizationErrorF2_41K
 from routines.makeSpectrum import makeSpectrum
 from routines.load import load
 from routines.poisson import fit
@@ -36,6 +36,9 @@ p_flip, _, _, _, _ = fit(model, x_flip, y_flip, p0_flip, bounds=[(0, np.inf)]*6)
 
 p0_norm = [80, 800, x_norm[np.argmax(y_norm)], 9, 1, 1]
 p_norm, _, _, _, _ = fit(model, x_norm, y_norm, p0_norm, bounds=[(0, np.inf)]*6)
+
+print(*p_norm)
+print(*p_flip)
 
 # Plot fits and spectra on the same plot
 fig = plt.figure(figsize=(6, 4))
@@ -132,7 +135,6 @@ fit_flip.errorbar(x_flip, y_flip, np.sqrt(y_flip), **flip_style, **flip_ebar)
 fit_flip.plot(x_flip, model(x_flip, *p_flip), **flip_style)
 fit_flip.plot(x_flip, model(x_flip, *p0_flip), **flip_style, **guess_style)
 
-res_flip = y_flip - model(x_flip, *p_flip)
 ress_flip.errorbar(x_flip, res_flip, np.sqrt(y_flip), **flip_style, **flip_ebar)
 
 # Plot OP_norm
@@ -147,7 +149,6 @@ fit_norm.errorbar(x_norm, y_norm, np.sqrt(y_norm), **norm_style, **norm_ebar)
 fit_norm.plot(x_norm, model(x_norm, *p_norm), **norm_style)
 fit_norm.plot(x_norm, model(x_norm, *p0_norm), **norm_style, **guess_style)
 
-res_norm = y_norm - model(x_norm, *p_norm)
 ress_norm.errorbar(x_norm, res_norm, np.sqrt(y_norm), **norm_style, **norm_ebar)
 
 # General plot stuff
@@ -157,6 +158,14 @@ fits.legend()
 ress.set_xlabel("Frequency wrt $^{39}$K cog [MHz]")
 fits.set_ylabel("Counts")
 ress.set_ylabel("Counts - Fit")
+
+ress_norm.set_xlabel("Frequency wrt $^{39}$K cog [MHz]")
+# fit_norm.set_ylabel("Counts")
+# ress_norm.set_ylabel("Counts - Fit")
+
+ress_flip.set_xlabel("Frequency wrt $^{39}$K cog [MHz]")
+# fit_flip.set_ylabel("Counts")
+# ress_flip.set_ylabel("Counts - Fit")
 
 title = "Sublevel Fits"
 flip_stats = "$\\chi^2_{Flip}$: " + f"{np.round(X2_flip / (len(y_flip) - len(p_flip)), 2)}"
