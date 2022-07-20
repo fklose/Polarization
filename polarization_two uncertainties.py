@@ -138,7 +138,7 @@ def computeInverseCorrelationMatrix(mle, p, args, eps):
             matrix[j, i] = partial
     return matrix
 
-
+# TODO This does not seem to give the right result. Need to double check
 m = computeInverseCorrelationMatrix(mle, p_flip, (x_flip, y_flip), 1e-10)                
 
 print(np.round(np.linalg.inv(m), 3))
