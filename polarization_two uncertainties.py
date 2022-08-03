@@ -4,7 +4,7 @@ from functions.physics import NuclearPolarizationF2_41K, NuclearPolarizationErro
 from routines.makeSpectrum import makeSpectrum
 from routines.load import load
 from routines.poisson import fit
-from functions.models import peaks, F2_pi_sublevels
+from functions.models import peaks, F2_pi_sublevels, F2_pi_sublevels_FAST
 from scipy.constants import physical_constants
 from tabulate import tabulate
 from scipy.optimize import curve_fit
@@ -81,7 +81,7 @@ h = 9.94
 g = 1.1
 
 # We now move towards fitting the sublevel populations by defining the model
-model = lambda x, am2, am1, a0, a1, a2, s: F2_pi_sublevels(x, am2, am1, a0, a1, a2, x0, h, s, g/2, B)
+model = lambda x, am2, am1, a0, a1, a2, s: F2_pi_sublevels_FAST(x, am2, am1, a0, a1, a2, x0, h, s, g/2, B)
 
 # Define Maximum Likelihood estimator
 mle = lambda p, args: - np.sum(args[1] * np.log(model(args[0], *p)) - model(args[0], *p))
@@ -91,13 +91,6 @@ p0_flip = [1, 1, 1, 1, 1, 1]
 p0_flip, _ = curve_fit(model, x_flip, y_flip, p0=p0_flip)
 res_flip = minimize(mle, p0_flip, args=[x_flip, y_flip], bounds=[(0, np.inf)]*5 + [(1, np.inf)], tol=1e-16)
 p_flip = res_flip.x
-
-
-def derivative1st():
-    return
-
-def derivative2nd():
-    return
 
 # Compute correlation matrix
 def computeInverseCorrelationMatrix(mle, p, args, eps):
@@ -109,81 +102,116 @@ def computeInverseCorrelationMatrix(mle, p, args, eps):
             if p[i] != 0:
                 left = [*p[:i], p[i]*(1 - eps), *p[i+1:]]
                 right = [*p[:i], p[i]*(1 + eps), *p[i+1:]]
+                delta = p[i]*eps
             else:
                 left = [*p[:i], p[i] - eps, *p[i+1:]]
                 right = [*p[:i], p[i] + eps, *p[i+1:]]
+                delta = eps
             
-            matrix[i, i] = (mle(left, args) - 2 * mle(p, args) + mle(right, args)) / eps**2
+            partial = (mle(left, args) - 2 * mle(p, args) + mle(right, args)) / delta**2
+        
         else:
             if p[i] != 0:
                 left = [*p[:i], p[i]*(1 - eps), *p[i+1:]]
                 right = [*p[:i], p[i]*(1 + eps), *p[i+1:]]
+                delta = p[i]*eps
             else:
                 left = [*p[:i], p[i] - eps, *p[i+1:]]
                 right = [*p[:i], p[i] + eps, *p[i+1:]]
+                delta = eps
             
-            if left[j] != 0:
-                left = [*left[:j], left[j]*(1 - eps), *left[j+1:]]
+            if p[j] != 0:
+                left0 = [*left[:j], left[j]*(1 - eps), *left[j+1:]]
+                left1 = [*left[:j], left[j]*(1 + eps), *left[j+1:]]
+                right0 = [*right[:j], right[j]*(1 - eps), *right[j+1:]]
+                right1 = [*right[:j], right[j]*(1 + eps), *right[j+1:]]
+                delta *= p[j]*eps
             else:
-                left = [*left[:j], left[j] - eps, *left[j+1:]]
-                
-            if right[j] != 0:
-                right = [*right[:j], right[j]*(1 + eps), *right[j+1:]]
-            else:
-                right = [*right[:j], right[j] + eps, *right[j+1:]]
+                left0 = [*left[:j], left[j] - eps, *left[j+1:]]
+                left1 = [*left[:j], left[j] + eps, *left[j+1:]]
+                right0 = [*right[:j], right[j] - eps, *right[j+1:]]
+                right1 = [*right[:j], right[j] + eps, *right[j+1:]]
+                delta *= eps
             
-            partial = (mle(left, args) - 2 * mle(p, args) + mle(right, args)) / eps**2
+            partial = (mle(left0, args) + mle(right1, args) - mle(left1, args) - mle(right0, args)) / 4 / delta
             
-            matrix[i, j] = partial
-            matrix[j, i] = partial
+        matrix[i, j] = partial
+        matrix[j, i] = partial
+            
     return matrix
 
-# TODO This does not seem to give the right result. Need to double check
-m = computeInverseCorrelationMatrix(mle, p_flip, (x_flip, y_flip), 1e-10)                
+# TODO !!--FIXED???--!! This does not seem to give the right result. Need to double check
+# TODO How should I pick FDA step size 1e-7, 1e-9, 1e-10 give decreasing uncertainties, starts breaking when too small or too large
+# 1e-8 gives non-sense? Outside of this range matrix is singular and cannot be inverted
+# TODO Scott Oser's notes mention that this is valid in the Gaussian approximation
+# (does this mean Gaussian wrt to error distribution or something else)
+# m = computeInverseCorrelationMatrix(mle, p_flip, (x_flip, y_flip), 1e-7)
 
-print(np.round(np.linalg.inv(m), 3))
+# m_inv = np.linalg.inv(m)
 
-m_inv = np.linalg.inv(m)
+# print("Inverse Covariance Matrix")
+# print('\n'.join(['\t'.join(['{:.3e}'.format(item) for item in row]) 
+#       for row in m_inv]))
 
-for i in range(len(p_flip)):
-    print(np.sqrt(m_inv[i, i]))
-    
+# # print(np.round(np.linalg.inv(m), 3))
 
-# def estimateErrorsMonteCarlo(mle, popt, args, x, y, N):
-#     """Estimate errors by simulating experiment.
-#     Experiemnts are simulated by drawing points from a dataset with replacement
-#     Each simulation will sample the same number of data points as the data.
-#     Each simulated experiment will be fitted using the model and the resulting variance in fit
-#     parameters is proportional to the error on the fit parameter.
-    
-#     See 15.6.1 of Numerical Recipes by Press, Teukolsky and Vetterling
-#     """
-    
-#     # 'Unpack' histogram
-#     samples = []
-#     for n, v in zip(y, x):
-#         samples += [v] * n
-    
-#     # Simulate experiment N times, fit it and save parameters
-#     params = []
-#     for _ in range(N):
-#         data = np.random.choice(samples, size=sum(y), replace=True)
-#         experiment = [0]*len(x)
-#         for i, v in enumerate(x):
-#             experiment[i] += sum(data == v)
-        
-#         # Fit mle to experiment and save parameters
-#         params.append(minimize(mle, popt, args, bounds=[(-np.inf, np.inf)]*5 + [(0.1, np.inf)], tol=1e-16).x)
-    
-#     return np.asarray(params)
+# # m_inv = np.linalg.inv(m)
 
-# params = estimateErrorsMonteCarlo(mle, p_flip, [x_flip, y_flip], x_flip, y_flip, 100)
-
-# table = []
+# print("Parameter Uncertainties")
 # for i in range(len(p_flip)):
-#     table.append([p_flip[i], np.std(params[:, i])])
+#     print(np.round(p_flip[i], 3), end="\t+/- ")
+#     print(np.round(np.sqrt(np.abs(m_inv[i, i])), 4))
+    
 
-# print(tabulate(table))
+def estimateErrorsMonteCarlo(mle, popt, args, x, y, N):
+    """Estimate errors by simulating experiment.
+    Experiemnts are simulated by drawing points from a dataset with replacement
+    Each simulation will sample the same number of data points as the data.
+    Each simulated experiment will be fitted using the model and the resulting variance in fit
+    parameters is proportional to the error on the fit parameter.
+    
+    See 15.6.1 of Numerical Recipes by Press, Teukolsky and Vetterling
+    """
+    
+    # 'Unpack' histogram
+    samples = []
+    for occurances, value in zip(y, x):
+        samples += [value] * occurances
+    
+    # Simulate experiment N times, fit it and save parameters
+    params = []
+    for h in range(N):
+        data = np.random.choice(samples, size=sum(y), replace=True)
+        experiment = [0]*len(x)
+        for i, v in enumerate(x):
+            experiment[i] += sum(data == v)
+        
+        # Fit mle to experiment and save parameters
+        params.append(minimize(mle, popt, [x, experiment], bounds=[(-np.inf, np.inf)]*5 + [(0.1, np.inf)], tol=1e-16).x)
+        
+        print(h)
+    
+    return np.asarray(params)
+
+params = estimateErrorsMonteCarlo(mle, p_flip, [x_flip, y_flip], x_flip, y_flip, 100)
+
+fig, axes = plt.subplots(2, 3)
+axes[0, 0].hist(params[:, 0], bins=20)
+axes[0, 1].hist(params[:, 1], bins=20)
+axes[0, 2].hist(params[:, 2], bins=20)
+axes[1, 0].hist(params[:, 3], bins=20)
+axes[1, 1].hist(params[:, 4], bins=20)
+axes[1, 2].hist(params[:, 5], bins=20)
+plt.show()
+
+print(np.round(params, 3))
+
+table = []
+for i in range(len(p_flip)):
+    table.append([p_flip[i], np.std(params[:, i])])
+
+print("Parameter Uncertainties from Monte Carlo")
+print(tabulate(table))
 
 
 
