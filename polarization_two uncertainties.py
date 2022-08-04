@@ -7,10 +7,7 @@ from routines.poisson import fit
 from functions.models import peaks, F2_pi_sublevels, F2_pi_sublevels_FAST
 from scipy.constants import physical_constants
 from tabulate import tabulate
-from scipy.optimize import curve_fit
-from scipy.optimize import minimize
-from scipy.optimize import newton
-from itertools import combinations
+from scipy.optimize import curve_fit, minimize
 from routines.uncertainties import estimateErrorsMonteCarlo
 
 # Define plot styles

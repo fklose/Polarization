@@ -125,6 +125,4 @@ def estimateErrorsMonteCarlo(mle, popt, x, y, N, minimize_kwargs):
         # Fit mle to experiment and save parameters
         params.append(minimize(mle, popt, [x, experiment], **minimize_kwargs).x)
         
-        print(h)
-    
     return np.asarray(params)
