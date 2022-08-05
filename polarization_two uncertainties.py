@@ -8,7 +8,7 @@ from functions.models import peaks, F2_pi_sublevels, F2_pi_sublevels_FAST
 from scipy.constants import physical_constants
 from tabulate import tabulate
 from scipy.optimize import curve_fit, minimize
-from routines.uncertainties import estimateErrorsMonteCarlo
+from routines.uncertainties import computeInverseCorrelationMatrix, computeInverseCorrelationMatrix_ALT, estimateErrors, estimateErrorsMonteCarlo
 
 # Define plot styles
 flip_ebar = {"capsize":3, "ls":"", "marker":".", "label":"$OP_{Flip}$"}
@@ -91,7 +91,29 @@ p0_flip = [1, 1, 1, 1, 1, 1]
 p0_flip, _ = curve_fit(model, x_flip, y_flip, p0=p0_flip)
 res_flip = minimize(mle, p0_flip, args=[x_flip, y_flip], **minimize_kwargs)
 p_flip = res_flip.x
-simulated_params = estimateErrorsMonteCarlo(mle, p_flip, x_flip, y_flip, 100, minimize_kwargs)
+
+table = [np.round(p_flip, 4)]
+# Compute Errors using MonteCarlo
+params = estimateErrorsMonteCarlo(mle, p_flip, x_flip, y_flip, 100, minimize_kwargs)
+errors = np.std(params, axis=0)
+table.append(np.round(errors, 4))
+
+# Compute Errors using InverseCorrelation
+matrix = computeInverseCorrelationMatrix(mle, p_flip, (x_flip, y_flip), 1e-6)
+errors = [np.sqrt(np.abs(np.linalg.inv(matrix)[i, i])) for i in range(np.shape(matrix)[0])]
+table.append(np.round(errors, 4))
+
+# Compute Errors using InverseCorrelation alternative
+matrix = computeInverseCorrelationMatrix_ALT(mle, p_flip, (x_flip, y_flip), 1e-8)
+errors = [np.sqrt(np.abs(np.linalg.inv(matrix)[i, i])) for i in range(np.shape(matrix)[0])]
+table.append(errors)
+
+# Compute errors using visual approach
+# lb, ub = estimateErrors(mle, p_flip, (x_flip, y_flip))
+# table.append(np.round(lb, 4))
+# table.append(np.round(ub, 4))
+
+print(tabulate(table))
 
 # p0_norm = [1, 1, 1, 1, 1, 1]
 # p0_norm, _ = curve_fit(model, x_norm, y_norm, p0=p0_norm)

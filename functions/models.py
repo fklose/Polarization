@@ -38,11 +38,11 @@ def F2_pi_sublevels_FAST(x, am2, am1, a0, a1, a2, x0, h, s, g, B):
     # Import Bohr Magneton from NIST 2018 CODATA database
     mu_B = physical_constants["Bohr magneton in Hz/T"][0] * 1e-6 * 1e-4
     
-    am2 = np.abs(am2)
-    am1 = np.abs(am1)
-    a0 = np.abs(a0)
-    a1 = np.abs(a1)
-    a2 = np.abs(a2)
+    # am2 = np.abs(am2)
+    # am1 = np.abs(am1)
+    # a0 = np.abs(a0)
+    # a1 = np.abs(a1)
+    # a2 = np.abs(a2)
     
     F1_ex_m1 = 3*am1*voigt(x, x0 - h + 2/3*mu_B*B, s, g)
     F1_ex_0 = 4*a0*voigt(x, x0 - h, s, g)

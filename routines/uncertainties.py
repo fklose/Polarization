@@ -99,6 +99,38 @@ def computeInverseCorrelationMatrix(mle, p, args, eps):
     return matrix
 
 
+def computeInverseCorrelationMatrix_ALT(mle, p, args, eps):
+    
+    matrix = np.zeros(shape=(len(p), len(p)))
+    
+    for i, j in combinations(range(len(p)), 2):
+        if i == j:
+            left = [*p[:i], p[i] - eps, *p[i+1:]]
+            right = [*p[:i], p[i] + eps, *p[i+1:]]
+            delta = eps
+            
+            partial = (mle(left, args) - 2 * mle(p, args) + mle(right, args)) / delta**2
+        
+        else:
+            
+            left = [*p[:i], p[i] - eps, *p[i+1:]]
+            right = [*p[:i], p[i] + eps, *p[i+1:]]
+            delta = eps
+        
+            left0 = [*left[:j], left[j] - eps, *left[j+1:]]
+            left1 = [*left[:j], left[j] + eps, *left[j+1:]]
+            right0 = [*right[:j], right[j] - eps, *right[j+1:]]
+            right1 = [*right[:j], right[j] + eps, *right[j+1:]]
+            delta *= eps
+            
+            partial = (mle(left0, args) + mle(right1, args) - mle(left1, args) - mle(right0, args)) / 4 / delta
+            
+        matrix[i, j] = partial
+        matrix[j, i] = partial
+            
+    return matrix
+
+
 def estimateErrorsMonteCarlo(mle, popt, x, y, N, minimize_kwargs):
     """Estimate errors by simulating experiment.
     Experiemnts are simulated by drawing points from a dataset with replacement
