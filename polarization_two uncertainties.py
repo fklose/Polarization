@@ -9,6 +9,7 @@ from scipy.constants import physical_constants
 from tabulate import tabulate
 from scipy.optimize import curve_fit, minimize
 from routines.uncertainties import computeInverseCorrelationMatrix, computeInverseCorrelationMatrix_ALT, estimateErrors, estimateErrorsMonteCarlo
+from routines.uncertainties import chi2_Poisson
 
 # Define plot styles
 flip_ebar = {"capsize":3, "ls":"", "marker":".", "label":"$OP_{Flip}$"}
@@ -83,6 +84,7 @@ model = lambda x, am2, am1, a0, a1, a2, s: F2_pi_sublevels_FAST(x, am2, am1, a0,
 
 # Define Maximum Likelihood estimator
 mle = lambda p, args: - np.sum(args[1] * np.log(model(args[0], *p)) - model(args[0], *p))
+chi2 = lambda p, args: chi2_Poisson(model(args[0], *p), y_flip)
 
 # Fit populations
 minimize_kwargs = {"bounds" : [(0, np.inf)]*5 + [(0.01, np.inf)], "tol" : 1e-16}
@@ -90,114 +92,21 @@ minimize_kwargs = {"bounds" : [(0, np.inf)]*5 + [(0.01, np.inf)], "tol" : 1e-16}
 p0_flip = [1, 1, 1, 1, 1, 1]
 p0_flip, _ = curve_fit(model, x_flip, y_flip, p0=p0_flip)
 res_flip = minimize(mle, p0_flip, args=[x_flip, y_flip], **minimize_kwargs)
-p_flip = res_flip.x
+p_flip_mle = res_flip.x
+res_flip = minimize(chi2, p0_flip, args=[x_flip, y_flip], **minimize_kwargs)
+p_flip_chi2 = res_flip.x
 
-table = [np.round(p_flip, 4)]
-# Compute Errors using MonteCarlo
-params = estimateErrorsMonteCarlo(mle, p_flip, x_flip, y_flip, 100, minimize_kwargs)
-errors = np.std(params, axis=0)
-table.append(np.round(errors, 4))
+p_flip = p_flip_chi2
 
-# Compute Errors using InverseCorrelation
-matrix = computeInverseCorrelationMatrix(mle, p_flip, (x_flip, y_flip), 1e-6)
-errors = [np.sqrt(np.abs(np.linalg.inv(matrix)[i, i])) for i in range(np.shape(matrix)[0])]
-table.append(np.round(errors, 4))
+print(p_flip_mle)
+print(p_flip_chi2)
 
-# Compute Errors using InverseCorrelation alternative
-matrix = computeInverseCorrelationMatrix_ALT(mle, p_flip, (x_flip, y_flip), 1e-8)
-errors = [np.sqrt(np.abs(np.linalg.inv(matrix)[i, i])) for i in range(np.shape(matrix)[0])]
-table.append(errors)
-
-# Compute errors using visual approach
-# lb, ub = estimateErrors(mle, p_flip, (x_flip, y_flip))
-# table.append(np.round(lb, 4))
-# table.append(np.round(ub, 4))
-
-print(tabulate(table))
-
-# p0_norm = [1, 1, 1, 1, 1, 1]
-# p0_norm, _ = curve_fit(model, x_norm, y_norm, p0=p0_norm)
-# p_norm, _, _, err_norm, X2_norm = fit(model, x_norm, y_norm, p0_norm, bounds=[(-np.inf, np.inf)]*5 + [(0.01, np.inf)])
-
-# # Enforce positive sign on parameters
-# p_flip = np.abs(p_flip)
-# p_norm = np.abs(p_norm)
-
-# # Print nuclear polarization and population levels
-# pnames = ["am2", "am1", "a0", "a1", "a2", "s", "P"]
-
-# p_flip_list = list(p_flip)
-# err_flip_list = list(err_flip)
-# p_norm_list = list(p_norm)
-# err_norm_list = list(err_norm)
-
-# p_flip_list.append(np.round(NuclearPolarizationF2_41K(p_flip[0], p_flip[1], p_flip[2], p_flip[3], p_flip[4]), 4))
-# err_flip_list.append(np.round(NuclearPolarizationErrorF2_41K(p_flip[0], p_flip[1], p_flip[2], p_flip[3], p_flip[4], err_flip[0], err_flip[1], err_flip[2], err_flip[3], err_flip[4]), 2))
-# p_norm_list.append(np.round(NuclearPolarizationF2_41K(p_norm[0], p_norm[1], p_norm[2], p_norm[3], p_norm[4]), 2))
-# err_norm_list.append(np.round(NuclearPolarizationErrorF2_41K(p_norm[0], p_norm[1], p_norm[2], p_norm[3], p_norm[4], err_norm[0], err_norm[1], err_norm[2], err_norm[3], err_norm[4]), 2))
-
-# print(tabulate(zip(pnames, np.round(p_flip_list, 4), np.round(err_flip_list, 4), np.round(p_norm_list, 4), np.round(err_norm_list, 4)), headers=["Name", "Flip", "Error", "Norm", "Error"]))
-
-# # Plot fits and spectra on the same plot
-# fig = plt.figure(figsize=(18, 4))
-# gs = fig.add_gridspec(2, 3, height_ratios=[3, 1])
-# fits = fig.add_subplot(gs[0, 0])
-# ress = fig.add_subplot(gs[1, 0])
-
-# fit_flip = fig.add_subplot(gs[0, 1])
-# ress_flip = fig.add_subplot(gs[1, 1])
-
-# fit_norm = fig.add_subplot(gs[0, 2])
-# ress_norm = fig.add_subplot(gs[1, 2])
-
-# # Plot OP_flip
-# fits.errorbar(x_flip, y_flip, np.sqrt(y_flip), **flip_style, **flip_ebar)
-# fits.plot(x_flip, model(x_flip, *p_flip), **flip_style)
-# fits.plot(x_flip, model(x_flip, *p0_flip), **flip_style, **guess_style)
-
-# res_flip = y_flip - model(x_flip, *p_flip)
-# ress.errorbar(x_flip, res_flip, np.sqrt(y_flip), **flip_style, **flip_ebar)
-
-# fit_flip.errorbar(x_flip, y_flip, np.sqrt(y_flip), **flip_style, **flip_ebar)
-# fit_flip.plot(x_flip, model(x_flip, *p_flip), **flip_style)
-# fit_flip.plot(x_flip, model(x_flip, *p0_flip), **flip_style, **guess_style)
-
-# ress_flip.errorbar(x_flip, res_flip, np.sqrt(y_flip), **flip_style, **flip_ebar)
-
-# # Plot OP_norm
-# fits.errorbar(x_norm, y_norm, np.sqrt(y_norm), **norm_style, **norm_ebar)
-# fits.plot(x_norm, model(x_norm, *p_norm), **norm_style)
-# fits.plot(x_norm, model(x_norm, *p0_norm), **norm_style, **guess_style)
-
-# res_norm = y_norm - model(x_norm, *p_norm)
-# ress.errorbar(x_norm, res_norm, np.sqrt(y_norm), **norm_style, **norm_ebar)
-
-# fit_norm.errorbar(x_norm, y_norm, np.sqrt(y_norm), **norm_style, **norm_ebar)
-# fit_norm.plot(x_norm, model(x_norm, *p_norm), **norm_style)
-# fit_norm.plot(x_norm, model(x_norm, *p0_norm), **norm_style, **guess_style)
-
-# ress_norm.errorbar(x_norm, res_norm, np.sqrt(y_norm), **norm_style, **norm_ebar)
-
-# # General plot stuff
-# fits.set_xticks([])
-# fits.legend()
-
-# ress.set_xlabel("Frequency wrt $^{39}$K cog [MHz]")
-# fits.set_ylabel("Counts")
-# ress.set_ylabel("Counts - Fit")
-
-# ress_norm.set_xlabel("Frequency wrt $^{39}$K cog [MHz]")
-# # fit_norm.set_ylabel("Counts")
-# # ress_norm.set_ylabel("Counts - Fit")
-
-# ress_flip.set_xlabel("Frequency wrt $^{39}$K cog [MHz]")
-# # fit_flip.set_ylabel("Counts")
-# # ress_flip.set_ylabel("Counts - Fit")
-
-# title = "Sublevel Fits"
-# flip_stats = "$\\chi^2_{Flip}$: " + f"{np.round(X2_flip / (len(y_flip) - len(p_flip)), 2)}"
-# norm_stats = "$\\chi^2_{Norm}$: " + f"{np.round(X2_norm / (len(y_norm) - len(p_norm)), 2)}"
-# fig.suptitle(" ; ".join([title, flip_stats, norm_stats]))
-
-# fig.subplots_adjust(hspace=0, wspace=0.1, right=0.95, left=0.05)
-# plt.show()
+# Plot chi2 by varying a single parameter holding the others fixed
+# for n, p in enumerate(p_flip):
+#     x = p + (p+1)*np.linspace(-0.9, 0.9, 100)
+#     f = [model(x_flip, *[*p_flip[:n], X, *p_flip[n+1:]]) for X in x]
+#     print(f)
+#     y = [chi2_Poisson(F, y_flip) for F in f]
+#     plt.plot(x, y)
+#     plt.show()
+    

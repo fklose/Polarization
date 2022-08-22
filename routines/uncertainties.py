@@ -4,6 +4,13 @@ from scipy.optimize import minimize, newton
 from itertools import combinations
 
 
+def chi2_Poisson(fit, y):
+    chi2 = np.zeros(np.shape(y))
+    chi2[y > 0] = fit[y > 0] - y[y > 0] + y[y > 0]*np.log(y[y > 0] / fit[y > 0])
+    chi2[y == 0] = fit[y == 0]
+    return 2*np.sum(chi2)
+
+
 def estimateErrors(mle, popt, args):
     """Determines 1-sigma parameter errors by finding parameter values to produce Delta ln(fun) = ln(fun(popt)) - ln(fun(p)) = 1/2
     
