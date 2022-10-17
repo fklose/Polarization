@@ -1,7 +1,6 @@
 from ROOT import TFile
 import numpy as np
 import matplotlib.pyplot as plt
-from sympy import re
 
 def load_data(file_path : str) -> dict:
     """Loads relevant polarization data from the .root file at file_path

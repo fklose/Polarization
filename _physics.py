@@ -1,4 +1,3 @@
-import uncertainties as uc
 from uncertainties.core import ufloat
 
 def nuclear_polarization_41K_F2(pops, pops_err):
@@ -11,4 +10,6 @@ def nuclear_polarization_41K_F2(pops, pops_err):
     
     total = am2 + am1 + a0 + ap1 + ap2
     
-    return 1 / (3/2) * (3/4) * (2*ap2 + ap1 - am1 - 2*am2) / total
+    P = 1 / (3/2) * (3/4) * (2*ap2 + ap1 - am1 - 2*am2) / total
+    
+    return P.nominal_value, P.std_dev

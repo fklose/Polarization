@@ -1,5 +1,4 @@
-from scipy.special import wofz, voigt_profile
-import numpy as np
+from scipy.special import voigt_profile
 from _constants import mu_B
 
 

@@ -1,13 +1,14 @@
 # Import external modules
 import numpy as np
 import matplotlib.pyplot as plt
+from iminuit import Minuit
+from uncertainties.core import ufloat
 # Import from files
 from _load import load_data, generate_histograms
 from _models import sublevel_model
 from _physics import nuclear_polarization_41K_F2
 
-PLOT = False
-SAVE_OUTPUT = False
+MAKE_HISTOGRAMS = False
 LOCKPOINT = 64.48 # MHz
 
 path_flip = "./output03627.root"
@@ -24,8 +25,9 @@ CUTS = {
     "TTTL_OP_Beam"  : (0    , 4200  )
 }
 
-# generate_histograms(data_flip, CUTS, False, False)
-# generate_histograms(data_norm, CUTS, False, False)
+if MAKE_HISTOGRAMS:
+    generate_histograms(data_flip, CUTS, False, False)
+    generate_histograms(data_norm, CUTS, False, False)
 
 # Apply cuts and generate final spectrum
 SPECTRUM_BITS_FLIP = data_flip["BITS"][
@@ -107,21 +109,15 @@ flip.set_ylabel("Counts")
 # plt.show()
 plt.close()
 
-from _models import sublevel_model_pdf
-
-def global_poisson_likelihood(p, x, y_norm, y_flip):
-    
-    x0, h, B, s, g, am2_norm, am1_norm, a0_norm, ap1_norm, ap2_norm, am2_flip, am1_flip, a0_flip, ap1_flip, ap2_flip = p
+def global_poisson_likelihood(x0, h, B, s, g, am2_norm, am1_norm, a0_norm, ap1_norm, ap2_norm, am2_flip, am1_flip, a0_flip, ap1_flip, ap2_flip, x, y_norm, y_flip):
     
     norm = sublevel_model(x, x0, h, am2_norm, am1_norm, a0_norm, ap1_norm, ap2_norm, B, s, g)
     flip = sublevel_model(x, x0, h, am2_flip, am1_flip, a0_flip, ap1_flip, ap2_flip, B, s, g)
     
     return - np.sum(y_norm * np.log(norm) - norm) - np.sum(y_flip * np.log(flip) - flip)
 
-from iminuit import Minuit
-
 c = lambda x0, h, B, s, g, am2_norm, am1_norm, a0_norm, ap1_norm, ap2_norm, am2_flip, am1_flip, a0_flip, ap1_flip, ap2_flip: \
-    global_poisson_likelihood([x0, h, B, s, g, am2_norm, am1_norm, a0_norm, ap1_norm, ap2_norm, am2_flip, am1_flip, a0_flip, ap1_flip, ap2_flip], 
+    global_poisson_likelihood(x0, h, B, s, g, am2_norm, am1_norm, a0_norm, ap1_norm, ap2_norm, am2_flip, am1_flip, a0_flip, ap1_flip, ap2_flip, 
                               frequencies[1:], y_norm, y_flip)
 
 m = Minuit(c, x0=363, h=9.94, B=-2.1, s=10, g=1.1,
@@ -134,6 +130,7 @@ m.limits["am2_flip", "am1_flip", "a0_flip", "ap1_flip", "ap2_flip",
 m.limits["x0"] = (361, 364)
 m.limits["B"] = (-3, -2)
 m.limits["s"] = (0, None)
+m.limits["h"] = (8, 11)
 
 m.fixed["h"] = True
 m.fixed["g"] = True
@@ -142,8 +139,6 @@ m.errordef = m.LIKELIHOOD
 
 m.migrad()
 m.hesse()
-
-m.draw_profile("a0_flip")
 
 print("Fit parameters and uncertainties")
 for p, v, e in zip(m.parameters, m.values, m.errors):
@@ -159,23 +154,30 @@ P_NORM = nuclear_polarization_41K_F2(m.values["am2_norm", "am1_norm", "a0_norm",
 P_FLIP = nuclear_polarization_41K_F2(m.values["am2_flip", "am1_flip", "a0_flip", "ap1_flip", "ap2_flip"], 
                                      m.errors["am2_flip", "am1_flip", "a0_flip", "ap1_flip", "ap2_flip"])
 
-print(f"P (Norm): {P_NORM}")
-print(f"P (Flip): {P_FLIP}")
+print(f"P (Norm): {np.round(P_NORM[0], 2)} +/- {np.round(P_NORM[1], 2)}")
+print(f"P (Flip): {np.round(P_FLIP[0], 2)} +/- {np.round(P_FLIP[1], 2)}")
 
 fig, (norm, flip) = plt.subplots(1, 2, layout="constrained", figsize=(12, 4))
 
+# Finer steps for plotting fitted function
+f_plotting = np.linspace(frequencies[1], frequencies[-1], 1000)
+
 norm.set_title("Norm Polarization")
-norm.hist(unbinned_norm, bins=bins, histtype="step")
-norm.plot(frequencies[1:], sublevel_model(frequencies[1:], *p_norm), color="black")
+norm.hist(unbinned_norm, bins=bins, histtype="step", color="black", lw=1)
+norm.plot(f_plotting, sublevel_model(f_plotting, *p_norm), color="red", lw=2)
 norm.set_xlabel("Frequency wrt $^{39}$K cog (MHz)")
 norm.set_ylabel("Counts")
 
 flip.set_title("Flip Polarization")
-flip.hist(unbinned_flip, bins=bins, histtype="step")
-flip.plot(frequencies[1:], sublevel_model(frequencies[1:], *p_flip), color="black")
+flip.hist(unbinned_flip, bins=bins, histtype="step", color="black", lw=1)
+flip.plot(f_plotting, sublevel_model(f_plotting, *p_flip), color="red", lw=2)
 flip.set_xlabel("Frequency wrt $^{39}$K cog (MHz)")
 flip.set_ylabel("Counts")
 
+norm.grid()
+norm.set_xlim(f_plotting[0], f_plotting[-1])
+flip.grid()
+flip.set_xlim(f_plotting[0], f_plotting[-1])
 plt.show()
 # plt.close()
 
