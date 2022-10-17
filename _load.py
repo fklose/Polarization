@@ -1,6 +1,7 @@
 from ROOT import TFile
 import numpy as np
 import matplotlib.pyplot as plt
+from subprocess import run
 
 def load_data(file_path : str) -> dict:
     """Loads relevant polarization data from the .root file at file_path
@@ -114,40 +115,57 @@ def load_data(file_path : str) -> dict:
     return dict
 
 
-def generate_histograms(data : dict, cuts : dict, show=False, save=True) -> None:
-    # TODO Need to work on this a bit more
-    # It is only saving the cuts at the moment as precut histos are overwritten
+def generate_histograms(data : dict, cuts : dict, show=False, save=True, path="") -> None:
+    
+    if path == "":
+        pre_cut = "Pre_Cut/"
+        post_cut = "Post_Cut/"
+    else:
+        run(["mkdir", path])
+        pre_cut = "/Pre_Cut/"
+        post_cut = "/Post_Cut/"
+    
+    try:
+        run(["mkdir", path + pre_cut])
+        run(["mkdir", path + post_cut])
+    except:
+        print("Directory already exists!")
     
     # Generate initial histograms using RootAna bins
     if show or save:
         plt.hist(data["X"], bins=np.linspace(-100.5, 100.5, 1000), histtype="step")
         plt.xlabel("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)")
-        plt.savefig("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0].png") if save else 0
+        plt.savefig(path + pre_cut + "TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0].png") if save else 0
+        plt.savefig(path + pre_cut + "TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0].svg") if save else 0
         plt.show() if show else plt.close()
 
     if show or save:
         plt.hist(data["Y"], bins=np.linspace(-10000.5, 10000.5, 10000), histtype="step")
         plt.xlabel("TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0] (ns)")
-        plt.savefig("TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0].png") if save else 0
+        plt.savefig(path + pre_cut + "TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0].png") if save else 0
+        plt.savefig(path + pre_cut + "TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0].svg") if save else 0
         plt.show() if show else plt.close()
 
     if show or save:
         plt.hist(data["Z"], bins=np.linspace(-100.5, 100.5, 1000), histtype="step")
         plt.xlabel("TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)")
-        plt.savefig("TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0].png") if save else 0
+        plt.savefig(path + pre_cut + "TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0].png") if save else 0
+        plt.savefig(path + pre_cut + "TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0].svg") if save else 0
         plt.show() if show else plt.close()
 
     if show or save:
         plt.hist(data["TTTL_OP_Beam"], bins=np.linspace(0, 4200, 420), histtype="step")
         plt.xlabel("TTTL_OP_Beam ($\mu$s)")
-        plt.savefig("TTTL_OP_Beam.png") if save else 0
+        plt.savefig(path + pre_cut + "TTTL_OP_Beam.png") if save else 0
+        plt.savefig(path + pre_cut + "TTTL_OP_Beam.svg") if save else 0
         plt.show() if show else plt.close()
 
     if show or save:
         plt.hist2d(data["X"], data["Z"], bins=(np.linspace(-100.5, 100.5, 1000), np.linspace(-100.5, 100.5, 1000)))
         plt.xlabel("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)")
         plt.ylabel("TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)")
-        plt.savefig("DelayLineAnode-2d.png") if save else 0
+        plt.savefig(path + pre_cut + "DelayLineAnode-2d.png") if save else 0
+        plt.savefig(path + pre_cut + "DelayLineAnode-2d.svg") if save else 0
         plt.show() if show else plt.close()
 
     # Generate Histograms with cut applied
@@ -157,7 +175,8 @@ def generate_histograms(data : dict, cuts : dict, show=False, save=True) -> None
                 range=[cuts["X"][0], cuts["X"][1]])
         plt.xlabel("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)")
         plt.xlim([cuts["X"][0], cuts["X"][1]])
-        plt.savefig("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0].png") if save else 0
+        plt.savefig(path + post_cut + "TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0].png") if save else 0
+        plt.savefig(path + post_cut + "TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0].svg") if save else 0
         plt.show() if show else plt.close()
 
     if show or save:
@@ -166,7 +185,8 @@ def generate_histograms(data : dict, cuts : dict, show=False, save=True) -> None
                 range=[cuts["Y"][0], cuts["Y"][1]])
         plt.xlabel("TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0] (ns)")
         plt.xlim([cuts["Y"][0], cuts["Y"][1]])
-        plt.savefig("TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0].png") if save else 0
+        plt.savefig(path + post_cut + "TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0].png") if save else 0
+        plt.savefig(path + post_cut + "TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0].svg") if save else 0
         plt.show() if show else plt.close()
 
     if show or save:
@@ -175,7 +195,8 @@ def generate_histograms(data : dict, cuts : dict, show=False, save=True) -> None
                 range=[cuts["Z"][0], cuts["Z"][1]])
         plt.xlabel("TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)")
         plt.xlim([cuts["Z"][0], cuts["Z"][1]])
-        plt.savefig("TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0].png") if save else 0
+        plt.savefig(path + post_cut + "TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0].png") if save else 0
+        plt.savefig(path + post_cut + "TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0].svg") if save else 0
         plt.show() if show else plt.close()
 
     if show or save:
@@ -185,7 +206,8 @@ def generate_histograms(data : dict, cuts : dict, show=False, save=True) -> None
                 range=[cuts["TTTL_OP_Beam"][0], cuts["TTTL_OP_Beam"][1]])
         plt.xlabel("TTTL_OP_Beam ($\mu$s)")
         plt.xlim([cuts["TTTL_OP_Beam"][0], cuts["TTTL_OP_Beam"][1]])
-        plt.savefig("TTTL_OP_Beam.png") if save else 0
+        plt.savefig(path + post_cut + "TTTL_OP_Beam.png") if save else 0
+        plt.savefig(path + post_cut + "TTTL_OP_Beam.svg") if save else 0
         plt.show() if show else plt.close()
 
     if show or save:
@@ -199,7 +221,8 @@ def generate_histograms(data : dict, cuts : dict, show=False, save=True) -> None
         plt.ylabel("TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)")
         plt.xlim([cuts["X"][0], cuts["X"][1]])
         plt.ylim([cuts["Z"][0], cuts["Z"][1]])
-        plt.savefig("DelayLineAnode-2d.png") if save else 0
+        plt.savefig(path + post_cut + "DelayLineAnode-2d.png") if save else 0
+        plt.savefig(path + post_cut + "DelayLineAnode-2d.svg") if save else 0
         plt.show() if show else plt.close()
     
     return

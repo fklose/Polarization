@@ -3,12 +3,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from iminuit import Minuit
 from uncertainties.core import ufloat
+from subprocess import run
 # Import from files
 from _load import load_data, generate_histograms
 from _models import sublevel_model
 from _physics import nuclear_polarization_41K_F2
 
-MAKE_HISTOGRAMS = False
+# TODO Test histogram saving
+# TODO Make plots nicer
+# TODO speed up plotting?
+
+MAKE_HISTOGRAMS = True # WARNING: this takes quite some time
+SHOW_HISTOGRAMS = False # WARNING: this takes even more time
 LOCKPOINT = 64.48 # MHz
 
 path_flip = "./output03627.root"
@@ -16,6 +22,8 @@ path_norm = "./output03628.root"
 
 data_flip = load_data(path_flip)
 data_norm = load_data(path_norm)
+
+OUTPUT_PATH = "TEST"
 
 CUTS = {
     "BITS"          : (1    , 52    ),
@@ -25,9 +33,8 @@ CUTS = {
     "TTTL_OP_Beam"  : (0    , 4200  )
 }
 
-if MAKE_HISTOGRAMS:
-    generate_histograms(data_flip, CUTS, False, False)
-    generate_histograms(data_norm, CUTS, False, False)
+generate_histograms(data_flip, CUTS, SHOW_HISTOGRAMS, MAKE_HISTOGRAMS, OUTPUT_PATH + "/FLIP")
+generate_histograms(data_norm, CUTS, SHOW_HISTOGRAMS, MAKE_HISTOGRAMS, OUTPUT_PATH + "/NORM")
 
 # Apply cuts and generate final spectrum
 SPECTRUM_BITS_FLIP = data_flip["BITS"][
