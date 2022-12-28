@@ -1,14 +1,16 @@
-from scipy.special import voigt_profile
 from _constants import mu_B
-
-
-# def voigt(x, x0, s, g):
-#     z = (x - x0 + 1j*g) / s / np.sqrt(2)
-#     return np.real(wofz(z)) / s / np.sqrt(2 * np.pi)
+from numba_stats import voigt as _voigt
+import numpy as np
 
 
 def voigt(x, x0, s, g):
-    return voigt_profile(x - x0, s, g)
+    # return voigt_profile(x - x0, s, g)
+    return _voigt._pdf(x, g, x0, s)
+
+
+def truncvoigt(x_min, x_max, x, gamma, loc, scale):
+    y = voigt.pdf(x, gamma, loc, scale)
+    return y / np.trapz(y, np.linspace(x_min, x_max, len(y)))
 
 
 def F2m2(x, am2, x0, h, B, s, g):

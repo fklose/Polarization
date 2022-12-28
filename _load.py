@@ -1,4 +1,4 @@
-from ROOT import TFile
+import ROOT
 import numpy as np
 import matplotlib.pyplot as plt
 from subprocess import run
@@ -13,7 +13,7 @@ def load_data(file_path : str) -> dict:
         dict: Dictionary containing numpy arrays of all necessary observables
     """
     
-    file = TFile(file_path)
+    file = ROOT.TFile(file_path)
     ntuple = file.Get("ntuple")
     
     EVENT = []
@@ -115,114 +115,98 @@ def load_data(file_path : str) -> dict:
     return dict
 
 
-def generate_histograms(data : dict, cuts : dict, show=False, save=True, path="") -> None:
+def generate_histograms(data : dict, cuts : dict, path="") -> None:
+    """Instead of making images, makes a .root file containing the relevant histograms.
+    This is much faster than rendering the histograms with matplotlib and is recommended.
+    """
     
-    if path == "":
-        pre_cut = "Pre_Cut/"
-        post_cut = "Post_Cut/"
-    else:
-        run(["mkdir", path])
-        pre_cut = "/Pre_Cut/"
-        post_cut = "/Post_Cut/"
+    run(["mkdir", path])
+    # Create output .root file
+    output = ROOT.TFile.Open(path + "/histograms.root", "RECREATE")
     
-    try:
-        run(["mkdir", path + pre_cut])
-        run(["mkdir", path + post_cut])
-    except:
-        print("Directory already exists!")
+    # Make histogram objects
+    X = ROOT.TH1D("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0]", "", 1000, -100.5, 100.5)
+    Y = ROOT.TH1D("TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0]", "", 100000, -10000.5, 10000.5)
+    Z = ROOT.TH1D("TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0]", "", 1000, -100.5, 100.5)
+    TTTL_OP_Beam = ROOT.TH1D("TTTL_OP_Beam", "", 420, 0, 4200)
+    DelayLineAnode_2d = ROOT.TH2D("DelayLineAnode-2d", "", 1000, -100.5, 100.5, 1000, -100.5, 100.5)
     
-    # Generate initial histograms using RootAna bins
-    if show or save:
-        plt.hist(data["X"], bins=np.linspace(-100.5, 100.5, 1000), histtype="step")
-        plt.xlabel("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)")
-        plt.savefig(path + pre_cut + "TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0].png") if save else 0
-        plt.savefig(path + pre_cut + "TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0].svg") if save else 0
-        plt.show() if show else plt.close()
-
-    if show or save:
-        plt.hist(data["Y"], bins=np.linspace(-10000.5, 10000.5, 10000), histtype="step")
-        plt.xlabel("TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0] (ns)")
-        plt.savefig(path + pre_cut + "TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0].png") if save else 0
-        plt.savefig(path + pre_cut + "TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0].svg") if save else 0
-        plt.show() if show else plt.close()
-
-    if show or save:
-        plt.hist(data["Z"], bins=np.linspace(-100.5, 100.5, 1000), histtype="step")
-        plt.xlabel("TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)")
-        plt.savefig(path + pre_cut + "TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0].png") if save else 0
-        plt.savefig(path + pre_cut + "TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0].svg") if save else 0
-        plt.show() if show else plt.close()
-
-    if show or save:
-        plt.hist(data["TTTL_OP_Beam"], bins=np.linspace(0, 4200, 420), histtype="step")
-        plt.xlabel("TTTL_OP_Beam ($\mu$s)")
-        plt.savefig(path + pre_cut + "TTTL_OP_Beam.png") if save else 0
-        plt.savefig(path + pre_cut + "TTTL_OP_Beam.svg") if save else 0
-        plt.show() if show else plt.close()
-
-    if show or save:
-        plt.hist2d(data["X"], data["Z"], bins=(np.linspace(-100.5, 100.5, 1000), np.linspace(-100.5, 100.5, 1000)))
-        plt.xlabel("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)")
-        plt.ylabel("TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)")
-        plt.savefig(path + pre_cut + "DelayLineAnode-2d.png") if save else 0
-        plt.savefig(path + pre_cut + "DelayLineAnode-2d.svg") if save else 0
-        plt.show() if show else plt.close()
-
-    # Generate Histograms with cut applied
-    if show or save:
-        plt.hist(data["X"][(cuts["X"][0] <= data["X"]) & (data["X"] <= cuts["X"][1])],
-                bins=np.linspace(-100.5, 100.5, 1000), histtype="step",
-                range=[cuts["X"][0], cuts["X"][1]])
-        plt.xlabel("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)")
-        plt.xlim([cuts["X"][0], cuts["X"][1]])
-        plt.savefig(path + post_cut + "TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0].png") if save else 0
-        plt.savefig(path + post_cut + "TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0].svg") if save else 0
-        plt.show() if show else plt.close()
-
-    if show or save:
-        plt.hist(data["Y"][(cuts["Y"][0] <= data["Y"]) & (data["Y"] <= cuts["Y"][1])],
-                bins=np.linspace(-10000.5, 10000.5, 10000), histtype="step",
-                range=[cuts["Y"][0], cuts["Y"][1]])
-        plt.xlabel("TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0] (ns)")
-        plt.xlim([cuts["Y"][0], cuts["Y"][1]])
-        plt.savefig(path + post_cut + "TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0].png") if save else 0
-        plt.savefig(path + post_cut + "TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0].svg") if save else 0
-        plt.show() if show else plt.close()
-
-    if show or save:
-        plt.hist(data["Z"][(cuts["Z"][0] <= data["Z"]) & (data["Z"] <= cuts["Z"][1])], 
-                bins=np.linspace(-100.5, 100.5, 1000), histtype="step",
-                range=[cuts["Z"][0], cuts["Z"][1]])
-        plt.xlabel("TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)")
-        plt.xlim([cuts["Z"][0], cuts["Z"][1]])
-        plt.savefig(path + post_cut + "TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0].png") if save else 0
-        plt.savefig(path + post_cut + "TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0].svg") if save else 0
-        plt.show() if show else plt.close()
-
-    if show or save:
-        plt.hist(data["TTTL_OP_Beam"][(cuts["TTTL_OP_Beam"][0] <= data["TTTL_OP_Beam"]) 
-                                    & (data["TTTL_OP_Beam"] <= cuts["TTTL_OP_Beam"][1])],
-                bins=np.linspace(0, 4200, 420), histtype="step",
-                range=[cuts["TTTL_OP_Beam"][0], cuts["TTTL_OP_Beam"][1]])
-        plt.xlabel("TTTL_OP_Beam ($\mu$s)")
-        plt.xlim([cuts["TTTL_OP_Beam"][0], cuts["TTTL_OP_Beam"][1]])
-        plt.savefig(path + post_cut + "TTTL_OP_Beam.png") if save else 0
-        plt.savefig(path + post_cut + "TTTL_OP_Beam.svg") if save else 0
-        plt.show() if show else plt.close()
-
-    if show or save:
-        X_CUT = (cuts["X"][0] <= data["X"]) & (data["X"] <= cuts["X"][1])
-        Z_CUT = (cuts["Z"][0] <= data["Z"]) & (data["Z"] <= cuts["Z"][1])
+    # Add axis labels, etc.
+    X.GetXaxis().SetTitle("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)")
+    X.GetYaxis().SetTitle("Counts")
+    
+    Y.GetXaxis().SetTitle("TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0] (ns)")
+    Y.GetYaxis().SetTitle("Counts")
+    
+    Z.GetXaxis().SetTitle("TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)")
+    Z.GetYaxis().SetTitle("Counts")
+    
+    TTTL_OP_Beam.GetXaxis().SetTitle("Time (#mus)")
+    TTTL_OP_Beam.GetYaxis().SetTitle("Counts")
+    
+    DelayLineAnode_2d.GetXaxis().SetTitle("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)")
+    DelayLineAnode_2d.GetYaxis().SetTitle("TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)")
+    DelayLineAnode_2d.SetOption("COLZ")
+    
+    # Copy objects so that I can make histograms with and without cuts
+    X_CUTS = X.Clone()
+    Y_CUTS = Y.Clone()
+    Z_CUTS = Z.Clone()
+    TTTL_OP_Beam_CUTS = TTTL_OP_Beam.Clone()
+    DelayLineAnode_2d_CUTS = DelayLineAnode_2d.Clone()
+    
+    # Crop the cut histograms
+    X_CUTS.GetXaxis().SetRangeUser(*cuts["X"])
+    Y_CUTS.GetXaxis().SetRangeUser(*cuts["Y"])
+    Z_CUTS.GetXaxis().SetRangeUser(*cuts["Z"])
+    TTTL_OP_Beam_CUTS.GetXaxis().SetRangeUser(*cuts["TTTL_OP_Beam"])
+    DelayLineAnode_2d_CUTS.GetXaxis().SetRangeUser(*cuts["X"])
+    DelayLineAnode_2d_CUTS.GetYaxis().SetRangeUser(*cuts["Z"])
+    
+    for x, y, z, tttl_op_beam in zip(data["X"], data["Y"], data["Z"], data["TTTL_OP_Beam"]):
+        X.Fill(x)
+        Y.Fill(y)
+        Z.Fill(z)
+        TTTL_OP_Beam.Fill(tttl_op_beam)
+        DelayLineAnode_2d.Fill(x, z)
         
-        plt.hist2d(data["X"][X_CUT & Z_CUT], data["Z"][X_CUT & Z_CUT],
-                bins=(np.linspace(-100.5, 100.5, 500), np.linspace(-100.5, 100.5, 500)),
-                range=[[cuts["X"][0], cuts["X"][1]], [cuts["Z"][0], cuts["Z"][1]]])
-        plt.xlabel("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)")
-        plt.ylabel("TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)")
-        plt.xlim([cuts["X"][0], cuts["X"][1]])
-        plt.ylim([cuts["Z"][0], cuts["Z"][1]])
-        plt.savefig(path + post_cut + "DelayLineAnode-2d.png") if save else 0
-        plt.savefig(path + post_cut + "DelayLineAnode-2d.svg") if save else 0
-        plt.show() if show else plt.close()
+        X_CUT = (cuts["X"][0] <= x) & (x <= cuts["X"][1])
+        Y_CUT = (cuts["Y"][0] <= y) & (y <= cuts["Y"][1])
+        Z_CUT = (cuts["Z"][0] <= z) & (z <= cuts["Z"][1])
+        TTTL_OP_Beam_CUT = (cuts["TTTL_OP_Beam"][0] <= tttl_op_beam) & (tttl_op_beam <= cuts["TTTL_OP_Beam"][1])
+        
+        if X_CUT:
+            X_CUTS.Fill(x)
+        
+        if Y_CUT:
+            Y_CUTS.Fill(y)
+        
+        if Z_CUT:
+            Z_CUTS.Fill(z)
+            
+        if TTTL_OP_Beam_CUT:
+            TTTL_OP_Beam_CUTS.Fill(tttl_op_beam)
+        
+        if (X_CUT & Z_CUT):
+            DelayLineAnode_2d_CUTS.Fill(x, z)
+    
+    output.mkdir("Original Data")
+    output.mkdir("Cut Data")
+    
+    output.cd("Original Data")    
+    X.Write()
+    Y.Write()
+    Z.Write()
+    TTTL_OP_Beam.Write()
+    DelayLineAnode_2d.Write()
+    
+    output.cd("Cut Data")
+    X_CUTS.Write()
+    Y_CUTS.Write()
+    Z_CUTS.Write()
+    TTTL_OP_Beam_CUTS.Write()
+    DelayLineAnode_2d_CUTS.Write()
+    
+    output.Close()
     
     return
