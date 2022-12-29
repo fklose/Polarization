@@ -21,21 +21,24 @@ OUTPUT_PATH = "./Example"
 path_flip = "./Example/output03627.root"
 path_norm = "./Example/output03628.root"
 
+# Load data from root files (see _load.py)
 data_flip = load_data(path_flip)
 data_norm = load_data(path_norm)
 
+# Set the cuts on the data
 CUTS = {
-    "BITS"          : (1    , 52    ),
-    "X"             : (0    , 20    ),
-    "Y"             : (1640 , 1720  ),
-    "Z"             : (-25  , 10    ),
-    "TTTL_OP_Beam"  : (0    , 4200  )
+    "BITS"          : (0    , 52    ),  # Cut on 1*QDC_EIO0 + 2*QDC_EIO1 + 4*QDC_EIO2 + ...
+    "X"             : (0    , 20    ),  # Cut on TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)
+    "Y"             : (1640 , 1720  ),  # Cut on TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0] (ns)
+    "Z"             : (-25  , 10    ),  # Cut on TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)
+    "TTTL_OP_Beam"  : (0    , 4200  )   # Cut on TTTL_OP_Beam (us)
 }
 
-generate_histograms(data_flip, CUTS, OUTPUT_PATH + "/FLIP")
-generate_histograms(data_norm, CUTS, OUTPUT_PATH + "/NORM")
+# Generate .root files containing histograms (see _load.py)
+generate_histograms(data_flip, CUTS, OUTPUT_PATH + "/histograms_flip.root")
+generate_histograms(data_norm, CUTS, OUTPUT_PATH + "/histograms_norm.root")
 
-# Apply cuts and generate final spectrum
+# Apply cuts on data and generate the spectrum
 SPECTRUM_BITS_FLIP = data_flip["BITS"][
         ((CUTS["X"][0]      <=  data_flip["X"])      & (data_flip["X"]    <=  CUTS["X"][1]))      \
     &   ((CUTS["Y"][0]      <=  data_flip["Y"])      & (data_flip["Y"]    <=  CUTS["Y"][1]))      \
@@ -61,9 +64,6 @@ unbinned_flip = 2*np.interp(V[SPECTRUM_BITS_FLIP], VCO_V, VCO_f) + LOCKPOINT
 unbinned_norm = 2*np.interp(V[SPECTRUM_BITS_NORM], VCO_V, VCO_f) + LOCKPOINT
 
 frequencies = 2*np.interp(V, VCO_V, VCO_f) + LOCKPOINT
-
-# Reject first data point as it includes extra counts from not pausing the DAQ on time
-frequencies = frequencies[1:]
 
 # Generate bins by selecting midpoints between adjacent frequencies and bin data
 bins = [(frequencies[i+1] + frequencies[i]) / 2 for i in range(len(frequencies) - 1)]
@@ -141,47 +141,52 @@ print(f"chi2\t\t:  {chi2:f}")
 print(f"dof\t\t:  {dof:d}")
 print(f"chi2/dof\t:  {chi2/dof:f}")
 
-# Plot final spectrum and fits
-fig, ((norm, flip), (norm_res, flip_res)) = plt.subplots(2, 2, layout="constrained", figsize=(8, 4), sharex=True, gridspec_kw={})
+# Make a figure and axis objects for plotting final spectrum and fits
+fig, ((norm, flip), (norm_res, flip_res)) = plt.subplots(2, 2, layout="constrained", figsize=(8, 4), sharex=True, gridspec_kw={"height_ratios":[5, 3]})
 
 # Finer steps for plotting fitted function
-f_plotting = np.linspace(frequencies[0], frequencies[-1], 1000)
+f_plotting = np.linspace(frequencies[0] - np.mean(np.diff(frequencies)), frequencies[-1] + np.mean(np.diff(frequencies)), 10000)
 
-norm.set_title("Norm Polarization")
+# Plot spectra and fits
 norm.errorbar(frequencies, y_norm, np.sqrt(y_norm), marker=".", ls="", color="black", markersize=8)
 norm.plot(f_plotting, sublevel_model(f_plotting, *p_norm), color="red", lw=2)
 
-flip.set_title("Flip Polarization")
 flip.errorbar(frequencies, y_flip, np.sqrt(y_flip), marker=".", ls="", color="black", markersize=8)
 flip.plot(f_plotting, sublevel_model(f_plotting, *p_flip), color="red", lw=2)
 
+# Plot associated residuals along with 1-sigma region
 norm_residuals = y_norm - sublevel_model(frequencies, *p_norm)
 norm_res.errorbar(frequencies, norm_residuals, np.sqrt(y_norm), ls="", marker=".", markersize=8, color="black")
 norm_res.hlines(0, min(frequencies), max(frequencies), lw=2, color="red")
-norm_res.fill_between(frequencies, -np.std(norm_residuals), np.std(norm_residuals), alpha=0.2, color="grey")
+norm_res.fill_between(f_plotting, -np.std(norm_residuals), np.std(norm_residuals), alpha=0.2, color="grey")
 
 flip_residuals = y_flip - sublevel_model(frequencies, *p_flip)
 flip_res.errorbar(frequencies, flip_residuals, np.sqrt(y_flip), ls="", marker=".", markersize=8, color="black")
 flip_res.hlines(0, min(frequencies), max(frequencies), lw=2, color="red")
-flip_res.fill_between(frequencies, -np.std(flip_residuals), np.std(flip_residuals), alpha=0.2, color="grey")
-norm.set_ylabel("Counts")
-norm.grid()
-norm.set_xlim(f_plotting[0], f_plotting[-1])
+flip_res.fill_between(f_plotting, -np.std(flip_residuals), np.std(flip_residuals), alpha=0.2, color="grey")
 
-# flip.set_ylabel("Counts")
-flip.grid()
+# Format plots, adding and adjusting titles, ticks and ticklabels
+alpha = 0.7
+
+norm.set_title("Norm Polarization")
+norm.set_ylabel("Counts") # ylabels are shared across both columns
+norm.set_xlim(f_plotting[0], f_plotting[-1])
+norm.grid(alpha=alpha)
+
+flip.set_title("Flip Polarization")
 flip.set_xlim(f_plotting[0], f_plotting[-1])
+flip.grid(alpha=alpha)
 
 norm_res.set_xlabel("Frequency wrt $^{39}$K cog (MHz)")
 norm_res.set_ylabel("Data - Model")
-norm_res.grid()
 norm_res.set_xlim(f_plotting[0], f_plotting[-1])
+norm_res.grid(alpha=alpha)
 
 flip_res.set_xlabel("Frequency wrt $^{39}$K cog (MHz)")
-# flip_res.set_ylabel("Data - Model")
-flip_res.grid()
 flip_res.set_xlim(f_plotting[0], f_plotting[-1])
+flip_res.grid(alpha=alpha)
 
+# Save figure
 plt.savefig(OUTPUT_PATH + "/fit.png")
 plt.savefig(OUTPUT_PATH + "/fit.pdf")
 

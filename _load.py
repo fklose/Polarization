@@ -115,14 +115,13 @@ def load_data(file_path : str) -> dict:
     return dict
 
 
-def generate_histograms(data : dict, cuts : dict, path="") -> None:
+def generate_histograms(data : dict, cuts : dict, fname="./histograms.root") -> None:
     """Instead of making images, makes a .root file containing the relevant histograms.
     This is much faster than rendering the histograms with matplotlib and is recommended.
     """
     
-    run(["mkdir", path])
     # Create output .root file
-    output = ROOT.TFile.Open(path + "/histograms.root", "RECREATE")
+    output = ROOT.TFile.Open(fname, "RECREATE")
     
     # Make histogram objects
     X = ROOT.TH1D("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0]", "", 1000, -100.5, 100.5)
@@ -131,7 +130,7 @@ def generate_histograms(data : dict, cuts : dict, path="") -> None:
     TTTL_OP_Beam = ROOT.TH1D("TTTL_OP_Beam", "", 420, 0, 4200)
     DelayLineAnode_2d = ROOT.TH2D("DelayLineAnode-2d", "", 1000, -100.5, 100.5, 1000, -100.5, 100.5)
     
-    # Add axis labels, etc.
+    # Add axis labels, title, etc.
     X.GetXaxis().SetTitle("TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)")
     X.GetYaxis().SetTitle("Counts")
     
