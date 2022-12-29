@@ -1,7 +1,5 @@
 import ROOT
 import numpy as np
-import matplotlib.pyplot as plt
-from subprocess import run
 
 def load_data(file_path : str) -> dict:
     """Loads relevant polarization data from the .root file at file_path
