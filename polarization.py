@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from iminuit import Minuit
 # Import from files
-from _load import load_data, generate_histograms
+from _load import load_data, compute_observables, generate_histograms
 from _models import sublevel_model
 from _physics import nuclear_polarization_41K_F2
 
@@ -24,6 +24,10 @@ path_norm = "./Example/output03628.root"
 # Load data from root files (see _load.py)
 data_flip = load_data(path_flip)
 data_norm = load_data(path_norm)
+
+# Compute observables
+data_flip = compute_observables(data_flip)
+data_norm = compute_observables(data_norm)
 
 # Set the cuts on the data
 CUTS = {

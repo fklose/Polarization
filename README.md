@@ -2,8 +2,10 @@
 This collection of scripts is used to extract and analyze data gathered by TRINAT's nuclear acquisition in order  to measure the nuclear polarization of trapped Potassium atoms.
 
 ## Files
-* `_constants.py`: Place to store relevant physical constants as global variables.
-* `_load.py`: Contains two functions: `load()` and `generate_histograms()`. `load()` is responsible for loading the ntuple and extracting the relevant data as well as converting it to proper units. `generate_histograms()` plots the data extracted using load. It plots the data before and after applying cuts.
+* `_constants.py`: Stores any relevant physical constants (e.g. $\mu_B$) in a single place.
+* `_load.py`: Contains two functions: `load_data()` and `generate_histograms()`:
+    * `load_data()` extracts relevant data from the given `.root` file. It also converts units where needed (`TDC_*` $\rightarrow$ $ns$, `TTTL_*` $\rightarrow$ $\mu s$)
+    * `generate_histograms()` plots the data extracted using load. It plots the data before and after applying cuts.
 * `_models.py`: Stores various models for fitting the data.
 * `_physics.py`: Stores functions to compute physical quantities (e.g. nuclear polarization)
 

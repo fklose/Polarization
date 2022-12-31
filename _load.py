@@ -92,25 +92,32 @@ def load_data(file_path : str) -> dict:
         "QDC_EIO5"          : np.asarray(QDC_EIO5)
     }
     
+    return dict
+
+
+def compute_observables(data : dict) -> dict:
+    
     # THRESHOLD is used to convert QDC_EIO data into true (1) or false (0) logic levels
     THRESHOLD = 1000
     
     # Compute extra observables
     observables = {
-        "X"     : dict["TDC_DL_X1"] - dict["TDC_DL_X2"],
-        "Y"     : dict["TDC_ION_MCP"] - dict["TDC_PHOTO_DIODE"],
-        "Z"     : dict["TDC_DL_Z1"] - dict["TDC_DL_Z2"],
-        "BITS"  : 1  * (dict["QDC_EIO0"] > THRESHOLD) \
-                + 2  * (dict["QDC_EIO1"] > THRESHOLD) \
-                + 4  * (dict["QDC_EIO2"] > THRESHOLD) \
-                + 8  * (dict["QDC_EIO3"] > THRESHOLD) \
-                + 16 * (dict["QDC_EIO4"] > THRESHOLD) \
-                + 32 * (dict["QDC_EIO5"] > THRESHOLD) \
+        "X"     : data["TDC_DL_X1"]     - data["TDC_DL_X2"],
+        "Y"     : data["TDC_ION_MCP"]   - data["TDC_PHOTO_DIODE"],
+        "Z"     : data["TDC_DL_Z1"]     - data["TDC_DL_Z2"],
+        "BITS"  : 1  * (data["QDC_EIO0"] > THRESHOLD) \
+                + 2  * (data["QDC_EIO1"] > THRESHOLD) \
+                + 4  * (data["QDC_EIO2"] > THRESHOLD) \
+                + 8  * (data["QDC_EIO3"] > THRESHOLD) \
+                + 16 * (data["QDC_EIO4"] > THRESHOLD) \
+                + 32 * (data["QDC_EIO5"] > THRESHOLD) \
     }
     
-    dict.update(observables)
+    # Add extra entries to the provided data dictionary
+    data.update(observables)
     
-    return dict
+    # Return the updated data dictionary
+    return data
 
 
 def generate_histograms(data : dict, cuts : dict, fname="./histograms.root") -> None:
