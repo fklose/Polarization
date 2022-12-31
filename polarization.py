@@ -172,9 +172,18 @@ table = tabulate(parameter_table, headers=parameter_table_header) + "\n\n" + \
 # Print the table
 print(table)
 
+# Add the parameter cuts to the table string in order to print them to the file
+CUTS_units = {"X":"ns", "Y":"ns", "Z":"ns", "TTTL_OP_Beam":"us", "BITS":""}
+CUTS_table = []
+CUTS_table_header = ["Name", "Lower Cut", "Upper Cut", "Unit"]
+for key, value in zip(CUTS.keys(), CUTS.values()):
+    CUTS_table.append([key, value[0], value[-1], CUTS_units[key]])
+
 # Save the table in a parameters.txt file in the OUTPUT_PATH
 with open(OUTPUT_PATH + "/parameters.txt", "w") as file:
     file.writelines(table)
+    file.write("\n\n")
+    file.writelines(tabulate(CUTS_table, headers=CUTS_table_header))
     
 
 # Make a figure and axis objects for plotting final spectrum and fits

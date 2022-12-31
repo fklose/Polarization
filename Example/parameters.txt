@@ -27,3 +27,11 @@ ap2          1051.55    +/-           16.9486          NORM
 chi2		:  29221.424152
 dof		:  93
 chi2/dof	:  314.208862
+
+Name            Lower Cut    Upper Cut  Unit
+------------  -----------  -----------  ------
+BITS                    1           52
+X                       0           20  ns
+Y                    1640         1720  ns
+Z                     -25           10  ns
+TTTL_OP_Beam            0         4200  us
