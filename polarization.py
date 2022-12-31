@@ -27,7 +27,7 @@ data_norm = load_data(path_norm)
 
 # Set the cuts on the data
 CUTS = {
-    "BITS"          : (0    , 52    ),  # Cut on 1*QDC_EIO0 + 2*QDC_EIO1 + 4*QDC_EIO2 + ...
+    "BITS"          : (1    , 52    ),  # Cut on 1*QDC_EIO0 + 2*QDC_EIO1 + 4*QDC_EIO2 + ...
     "X"             : (0    , 20    ),  # Cut on TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)
     "Y"             : (1640 , 1720  ),  # Cut on TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0] (ns)
     "Z"             : (-25  , 10    ),  # Cut on TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)
@@ -55,8 +55,8 @@ SPECTRUM_BITS_NORM = data_norm["BITS"][
 
 # Obtain scan frequencies using measured VCO voltage
 # Note that the VCO voltage-frequency curves are not the same for sweeping up vs sweeping down
-VCO_V_down, VCO_f_down = np.loadtxt("./AOM Calibrations/M1212-aQ50-2/calibration_downsweep.csv", unpack=True)
-VCO_V_up  , VCO_f_up   = np.loadtxt("./AOM Calibrations/M1212-aQ50-2/calibration_upsweep.csv", unpack=True)
+VCO_V_down, VCO_f_down = np.loadtxt("./VCO Calibrations/ZX-95-200-S+/calibration_downsweep.csv", unpack=True)
+VCO_V_up  , VCO_f_up   = np.loadtxt("./VCO Calibrations/ZX-95-200-S+/calibration_upsweep.csv", unpack=True)
 
 # DAQ does not now about stepping up or down, so average up- and downsweep together
 VCO_V = (np.flip(VCO_V_down) + VCO_V_up) / 2
