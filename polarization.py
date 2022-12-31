@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from iminuit import Minuit
+from tabulate import tabulate
 # Import from files
 from _load import load_data, compute_observables, generate_histograms
 from _models import sublevel_model
@@ -118,14 +119,6 @@ m.errordef = m.LIKELIHOOD
 m.migrad() # Run the minimizer
 m.hesse() # Determine errors
 
-print("Fit parameters and errors")
-for parameter, value, error in zip(m.parameters, m.values, m.errors):
-    if (parameter == "x0") or (parameter == "h") or (parameter == "B") or (parameter == "s") or (parameter == "g") or PRINT_AMPLITUDES:
-        if m.fixed[parameter]:
-            print(f"{parameter}\t\t:  {np.round(value, 4)} (fixed)")
-        else:
-            print(f"{parameter}\t\t:  {np.round(value, 4)} +/- {np.round(error, 4)}")
-
 p_norm = m.values["x0", "h", "am2_norm", "am1_norm", "a0_norm", "ap1_norm", "ap2_norm", "B", "s", "g"]
 p_flip = m.values["x0", "h", "am2_flip", "am1_flip", "a0_flip", "ap1_flip", "ap2_flip", "B", "s", "g"]
 
@@ -135,11 +128,7 @@ P_NORM = nuclear_polarization_41K_F2(m.values["am2_norm", "am1_norm", "a0_norm",
 P_FLIP = nuclear_polarization_41K_F2(m.values["am2_flip", "am1_flip", "a0_flip", "ap1_flip", "ap2_flip"], 
                                      m.errors["am2_flip", "am1_flip", "a0_flip", "ap1_flip", "ap2_flip"])
 
-# Print result
-print(f"P (Norm)\t:  {np.round(P_NORM[0], 4)} +/- {np.round(P_NORM[1], 4)}")
-print(f"P (Flip)\t:  {np.round(P_FLIP[0], 4)} +/- {np.round(P_FLIP[1], 4)}")
-
-# Print fit statistics
+# Attempt to compute some fit statistics
 chi2_flip = sublevel_model(frequencies, *p_flip)
 chi2_flip[y_flip != 0] += y_flip * np.log(y_flip / sublevel_model(frequencies, *p_flip))
 chi2_norm = sublevel_model(frequencies, *p_norm)
@@ -149,9 +138,44 @@ chi2 = 2*np.sum(chi2_flip) + 2*np.sum(chi2_norm)
 
 dof = len(y_norm) + len(y_flip) - m.nfit
 
-print(f"chi2\t\t:  {chi2:f}")
-print(f"dof\t\t:  {dof:d}")
-print(f"chi2/dof\t:  {chi2/dof:f}")
+# Print fit results
+
+units = {"x0":"MHz", "h":"MHz", "B":"G", "s":"MHz", "g":"MHz"}
+
+parameter_table = []
+parameter_table_header = ["Parameter", "Value", "", "Standard Error", "Unit", ""]
+for parameter, value, error in zip(m.parameters, m.values, m.errors):
+    if (parameter == "x0") or (parameter == "h") or (parameter == "B") or (parameter == "s") or (parameter == "g") or PRINT_AMPLITUDES:
+        if m.fixed[parameter]:
+            parameter_table.append([f"{parameter}", f"{np.round(value, 4)}", "", "", units[parameter], "fixed"])
+        else:
+            parameter_table.append([f"{parameter}", f"{np.round(value, 4)}", "+/-", f"{np.round(error, 4)}", units[parameter], ""])
+
+transition_strengths_flip_table = []
+transition_strengths_norm_table = []
+for parameter, value, error in zip(m.parameters, m.values, m.errors):
+    if "flip" in parameter:
+        transition_strengths_flip_table.append([f"{parameter[:-5]}", f"{np.round(value, 4)}", "+/-", f"{np.round(error, 4)}", "", "FLIP"])
+    if "norm" in parameter:
+        transition_strengths_norm_table.append([f"{parameter[:-5]}", f"{np.round(value, 4)}", "+/-", f"{np.round(error, 4)}", "", "NORM"])
+
+# Form the string that contains the different parameter tables
+table = tabulate(parameter_table, headers=parameter_table_header) + "\n\n" + \
+    tabulate(transition_strengths_flip_table, headers=parameter_table_header) + "\n" + \
+    f"---> P (Flip): {np.round(P_FLIP[0], 4)} +/- {np.round(P_FLIP[1], 4)}" + "\n\n" + \
+    tabulate(transition_strengths_norm_table, headers=parameter_table_header) + "\n" + \
+    f"---> P (Norm): {np.round(P_NORM[0], 4)} +/- {np.round(P_NORM[1], 4)}" + "\n\n" + \
+    f"chi2\t\t:  {chi2:f}" + "\n" + \
+    f"dof\t\t:  {dof:d}" + "\n" + \
+    f"chi2/dof\t:  {chi2/dof:f}"
+
+# Print the table
+print(table)
+
+# Save the table in a parameters.txt file in the OUTPUT_PATH
+with open(OUTPUT_PATH + "/parameters.txt", "w") as file:
+    file.writelines(table)
+    
 
 # Make a figure and axis objects for plotting final spectrum and fits
 fig, ((norm, flip), (norm_res, flip_res)) = plt.subplots(2, 2, layout="constrained", figsize=(8, 4), sharex=True, gridspec_kw={"height_ratios":[5, 3]})
