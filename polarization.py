@@ -138,18 +138,17 @@ chi2 = 2*np.sum(chi2_flip) + 2*np.sum(chi2_norm)
 
 dof = len(y_norm) + len(y_flip) - m.nfit
 
-# Print fit results
-
-units = {"x0":"MHz", "h":"MHz", "B":"G", "s":"MHz", "g":"MHz"}
+# Generate tables for fit results
+parameter_units = {"x0":"MHz", "h":"MHz", "B":"G", "s":"MHz", "g":"MHz"}
 
 parameter_table = []
 parameter_table_header = ["Parameter", "Value", "", "Standard Error", "Unit", ""]
 for parameter, value, error in zip(m.parameters, m.values, m.errors):
     if (parameter == "x0") or (parameter == "h") or (parameter == "B") or (parameter == "s") or (parameter == "g") or PRINT_AMPLITUDES:
         if m.fixed[parameter]:
-            parameter_table.append([f"{parameter}", f"{np.round(value, 4)}", "", "", units[parameter], "fixed"])
+            parameter_table.append([f"{parameter}", f"{np.round(value, 4)}", "", "", parameter_units[parameter], "fixed"])
         else:
-            parameter_table.append([f"{parameter}", f"{np.round(value, 4)}", "+/-", f"{np.round(error, 4)}", units[parameter], ""])
+            parameter_table.append([f"{parameter}", f"{np.round(value, 4)}", "+/-", f"{np.round(error, 4)}", parameter_units[parameter], ""])
 
 transition_strengths_flip_table = []
 transition_strengths_norm_table = []
@@ -169,17 +168,16 @@ table = tabulate(parameter_table, headers=parameter_table_header) + "\n\n" + \
     f"dof\t\t:  {dof:d}" + "\n" + \
     f"chi2/dof\t:  {chi2/dof:f}"
 
-# Print the table
+# Print the table containing fit parameters and
 print(table)
 
 # Add the parameter cuts to the table string in order to print them to the file
-CUTS_units = {"X":"ns", "Y":"ns", "Z":"ns", "TTTL_OP_Beam":"us", "BITS":""}
 CUTS_table = []
-CUTS_table_header = ["Name", "Lower Cut", "Upper Cut", "Unit"]
+CUTS_table_header = ["Name", "Lower Cut", "Upper Cut"]
 for key, value in zip(CUTS.keys(), CUTS.values()):
-    CUTS_table.append([key, value[0], value[-1], CUTS_units[key]])
+    CUTS_table.append([key, value[0], value[-1]])
 
-# Save the table in a parameters.txt file in the OUTPUT_PATH
+# Save the table along with a printout of the applied cuts in a parameters.txt file in the OUTPUT_PATH
 with open(OUTPUT_PATH + "/parameters.txt", "w") as file:
     file.writelines(table)
     file.write("\n\n")
