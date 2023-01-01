@@ -61,8 +61,10 @@ To fit this global model the sum of two log-likelihoods is minimized.
 A single dataset $(x_i, y_i)$ can be fitted to some model $f(x; \vec{\alpha})$ where $\vec{\alpha}$ is a vector of parameters by minimizing:
 $$-\mathcal{L} = - \log{L} = - \sum_i \left[y_i \log{(f(x_i; \vec{p}))} - f(x_i, \vec{p})\right]$$
 
-To perform a simultaneous fit we add the likelihood functions computed using the norm and flip data: $\text{test}$
-$$-\mathcal{L}^\text{Global} = - \sum_i^{N^\text{Flip}} \left[y^\text{Flip}_i \log{(f(x^\text{Flip}_i; \vec{\alpha}, \vec{b}^\text{Flip}))} - f(x^\text{Flip}_i; \vec{\alpha}, \vec{b}^\text{Flip})\right] - \sum_i^{N^\text{Norm}} \left[y^\text{Norm}_i \log{(f(x^\text{Norm}_i; \vec{\alpha}, \vec{b}^\text{Norm}))} - f(x^\text{Norm}_i; \vec{\alpha}, \vec{b}^\text{Norm})\right]$$
+To perform a simultaneous fit we add the likelihood functions computed using the norm and flip data:
+$$
+-\mathcal{L}^\text{Global} = - \sum_i^{N^\text{Flip}} \left[y^\text{Flip}_i \log{(f(x^\text{Flip}_i; \vec{\alpha}, \vec{b}^\text{Flip}))} - f(x^\text{Flip}_i; \vec{\alpha}, \vec{b}^\text{Flip})\right] \\ - \sum_i^{N^\text{Norm}} \left[y^\text{Norm}_i \log{(f(x^\text{Norm}_i; \vec{\alpha}, \vec{b}^\text{Norm}))} - f(x^\text{Norm}_i; \vec{\alpha}, \vec{b}^\text{Norm})\right]
+$$
 Here we have 3 parameter vectors $\vec{\alpha}$ and $\vec{b}$ where:
 $$\vec{\alpha} = \begin{pmatrix}
     x_0 \quad h \quad B \quad s \quad g
