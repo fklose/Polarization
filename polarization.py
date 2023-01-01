@@ -8,36 +8,35 @@ from _load import load_data, compute_observables, generate_histograms
 from _models import sublevel_model
 from _physics import nuclear_polarization_41K_F2
 
-# If true prints the fitted transition amplitudes
-PRINT_AMPLITUDES = False
-
-# Set measurement parameters
-V_MIN = 7.79 # Minimum VCO Control Voltage (V)
-V_MAX = 9.76 # Maximum VCO Control Voltage (V)
-STEPS = 53 # Number of steps in a scan
-LOCKPOINT = 64.48 # Frequency of 405 nm lock (MHz)
-
 # Set data input and output paths
 OUTPUT_PATH = "./Example"
-path_flip = "./Example/output03627.root"
-path_norm = "./Example/output03628.root"
+PATH_FLIP = "./Example/output03627.root"
+PATH_NORM = "./Example/output03628.root"
+
+# Set measurement parameters
+V_MIN = 7.79        # Minimum VCO Control Voltage (V)
+V_MAX = 9.76        # Maximum VCO Control Voltage (V)
+STEPS = 53          # Number of steps in a scan
+LOCKPOINT = 64.48   # Frequency of 405 nm lock (MHz)
+
+# Set the cuts on the data
+CUTS = { #  Name              (Lower, Upper )
+            "BITS"          : (1    , 52    ),  # Cut on 1*QDC_EIO0 + 2*QDC_EIO1 + 4*QDC_EIO2 + ...
+            "X"             : (0    , 20    ),  # Cut on TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)
+            "Y"             : (1640 , 1720  ),  # Cut on TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0] (ns)
+            "Z"             : (-25  , 10    ),  # Cut on TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)
+            "TTTL_OP_Beam"  : (0    , 4200  )   # Cut on TTTL_OP_Beam (us)
+}
+
+### CODE STARTS HERE ###
 
 # Load data from root files (see _load.py)
-data_flip = load_data(path_flip)
-data_norm = load_data(path_norm)
+data_flip = load_data(PATH_FLIP)
+data_norm = load_data(PATH_NORM)
 
 # Compute observables
 data_flip = compute_observables(data_flip)
 data_norm = compute_observables(data_norm)
-
-# Set the cuts on the data
-CUTS = {
-    "BITS"          : (1    , 52    ),  # Cut on 1*QDC_EIO0 + 2*QDC_EIO1 + 4*QDC_EIO2 + ...
-    "X"             : (0    , 20    ),  # Cut on TDC_DL_X1_LE[0] - TDC_DL_X2_LE[0] (ns)
-    "Y"             : (1640 , 1720  ),  # Cut on TDC_ION_MCP_LE[0] - TDC_PHOTO_DIODE_LE[0] (ns)
-    "Z"             : (-25  , 10    ),  # Cut on TDC_DL_Z1_LE[0] - TDC_DL_Z2_LE[0] (ns)
-    "TTTL_OP_Beam"  : (0    , 4200  )   # Cut on TTTL_OP_Beam (us)
-}
 
 # Generate .root files containing histograms (see _load.py)
 generate_histograms(data_flip, CUTS, OUTPUT_PATH + "/histograms_flip.root")
@@ -144,7 +143,7 @@ parameter_units = {"x0":"MHz", "h":"MHz", "B":"G", "s":"MHz", "g":"MHz"}
 parameter_table = []
 parameter_table_header = ["Parameter", "Value", "", "Standard Error", "Unit", ""]
 for parameter, value, error in zip(m.parameters, m.values, m.errors):
-    if (parameter == "x0") or (parameter == "h") or (parameter == "B") or (parameter == "s") or (parameter == "g") or PRINT_AMPLITUDES:
+    if (parameter == "x0") or (parameter == "h") or (parameter == "B") or (parameter == "s") or (parameter == "g"):
         if m.fixed[parameter]:
             parameter_table.append([f"{parameter}", f"{np.round(value, 4)}", "", "", parameter_units[parameter], "fixed"])
         else:

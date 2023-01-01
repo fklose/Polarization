@@ -1,12 +1,12 @@
 from _constants import mu_B
-from numba_stats import voigt as _voigt
-# from scipy.special import voigt_profile
+# from numba_stats import voigt as _voigt
+from scipy.special import voigt_profile
 import numpy as np
 
 
 def voigt(x, x0, s, g):
-    # return voigt_profile(x - x0, s, g)
-    return _voigt._pdf(x, g, x0, s)
+    return voigt_profile(x - x0, s, g)
+    # return _voigt._pdf(x, g, x0, s)
 
 
 def F2m2(x, am2, x0, h, B, s, g):

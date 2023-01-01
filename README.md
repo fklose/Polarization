@@ -10,45 +10,65 @@ This collection of scripts is used to extract and analyze data gathered by TRINA
 * `_models.py`: Stores models used to fit the data (currently only $F=2 \rightarrow F'$ is implemented).
 * `_physics.py`: Stores functions to compute physical quantities (e.g. nuclear polarization).
 
-* `polarization.py`: Performs the analysis, using functions defined in the files above. Loads data, makes cuts and fits the model to the generated spectra.
+* `polarization.py`: Performs the analysis using functions defined in the files above. 
+Loads data, makes cuts and fits the model to the generated spectra.
+Generates a printout of the fit parameters and saves them to a `.txt` file.
 
 ## How to use this script
-
+1. Set `OUTPUT_PATH`. I recommend making a folder containing the two `.root` files for FLIP and NORM and using that to store the output of this script to keep all files used in this analysis in the same place for better organization.
+2. Set `path_flip` and `path_norm` to point to the correct `.root` files.
+3. Set the measurement parameters `V_MIN`, `V_MAX`, `STEPS` and `LOCKPOINT`. These should be recorded for every measurement.
+4. Run the script.
+5. Check the histograms generated in `.root` files called `histograms_*.root` in the output folder to make sure that cuts are done properly.
+Adjust `CUTS` if necessary and run again.
 
 ### Prerequisites
+#### ROOT
 To use this script it requires the following pre-requisites:
-* A ROOT install (I have tested this using ROOT6 however I have tried to use very basic functionality in order to try and be compatible with ROOT5 but have not tested this).
-    * To install ROOT I recommend using conda, but other methods should works just as well as long as you have access to the python interface.
+* A ROOT install that provides access to ROOT's python interface
+    * I have tested this with ROOT6. ROOT5 should also work since I am using very basic functionality, but I have not tested this.
 
 #### Python Modules
-* matplotlib: Required for plotting data.
-* numpy: Used for making cuts on data and computations.
-* iminuit: Used for fitting.
-* uncertainties: Used to propagate uncertainties through calculations.
-* scipy: Implementation of voigt profile as well as access to their NIST maintained physical constants database.
+* Matplotlib: Required for plotting data.
+* Numpy: Used for making cuts on data and computations.
+* iMinuit: Used for fitting.
+* uncertainties: Used to propagate statistical uncertainties through nuclear polarization calculations.
+* scipy: Obtain physical constants from NIST CODATA database. Implementation of Voigt profile.
+* tabulate: For making nice tables.
+
+These can be installed using pip:
+
+`pip install matplotlib numpy iminuit uncertainties scipy tabulate`
 
 ### Input and Output
-As mentioned previously this script only needs the two root files corresponding to opposite polarizations of optical pumping light (i.e. norm and flip or $\sigma^+$ and $\sigma^-$).
+1. **fit.pdf/.png**: Image of the two spectra along with fits and residuals. In the residuals plot $\pm$ 1-$\sigma$ of the residuals is indicated by a shaded bar.
+2. **histograms_*.root**: Saves the data relevant to the analysis in `.root` files. Included is data before applying cuts and after.
+3. **parameters.txt**: Copy of the script output. Includes fit parameters and statistics, nuclear polarization and the cuts applied to the data.
 
-As output it will print the fit parameters and save an image of the final plot. If `MAKE_HISTOGRAMS` is set to `True` or `1`, it will also generate histograms of the ntuple data with and without cuts applied to it.
+## Fitting Procedure
+The main problem with the polarization data is that the sublevels are identified using their frequency shifts.
+This is hard since the sublevel shifts depend on three parameters: $x_0$ which is a "frequency" shift related to the isotope shift, $B$ the magnetic field (Zeeman effect) and the laser power (Stark shift) (in its current form the script does not account for a Stark shift and I am only mentioning it here for completeness).
 
-## Fit Procedure
-In this last section I want to quickly describe the fit procedure that is used.
-The main problem with the polarization data is that is that the subleves are identified using their frequency shifts.
-This makes it hard, as with well polarized data we will only see a single peak which will not correspond to the frequency center (frequency of $F=2 \rightarrow 2', m_F=0$) of the transition, as all sublevels apart from the $m_F=0$ subleves are subject to a Zeeman shift ($m_F=0$ can also experience a Stark shift but this does not seem to be an issue in this case although it should be investigated again).
-This means that in practice it is very hard to consistently and accurately predict the sublevel populations when only fitting a single scan.
+Accounting for the "frequency" shift and the Zeeman shift at the same time leaves us with two unrelated parameters that both affect the frequency locations of the sublevel transitions.
+Essentially we have an expression with two unknowns leaving us with infinitely many solutions.
+One approach to circumvent this issue would be to fix one of the parameters, but the frequency shifts are usually not known to high enough precision and the magnetic field strength inside the trap is hard to measure in situ.
+The second approach is to fit two spectra at opposite pumping polarizations (norm and flip) simultaneously.
+This takes advantage of the symmetry of the Zeeman effect when probing it with $\pi$-polarized light.
+The magnetic field $B$ controls the "width" of each spectrum, i.e. the splitting between the $m_F = \pm 2$ and $m_F = \pm 1$.
+By using spectra taken at roughly opposite polarization we essentially provide data for both $m_F = +2$ and $m_F = -2$ and hence can determine this total width more precisely.
 
-The solution is to fit the data at opposite polarizations at the same time, sharing some parameters between both datasets.
-The important ones to share are the location of $F=2 \rightarrow 2', m_F=0$ labelled as $x_0$ and the strength of the magnetic field $B$.
-It might also be reasonable to fit $\sigma$ and $\gamma$ independently for each scan but since they seem to be related to the transition linewidth and the probe laser linewidth they are not very likely to change from scan to scan.
-For each polarization the sublevel populations are fitted independently.
-To determine the best fit a log-likelihood is minimized with the general form being:
-$$-\log{L} = - \sum_i \left[y_i \log{(f(x_i, \vec{p}))} - f(x_i, \vec{p})\right]$$
-Here $\vec{p}$ is a vector containing the parameters to be minimized.
-This likelihood function takes the poisson statistics of the errors on the counts into account in order to avoid biasing the fit.
+To fit this global model the sum of two log-likelihoods is minimized.
+A single dataset $(x_i, y_i)$ can be fitted to some model $f(x; \vec{\alpha})$ where $\vec{\alpha}$ is a vector of parameters by minimizing:
+$$-\mathcal{L} = - \log{L} = - \sum_i \left[y_i \log{(f(x_i; \vec{p}))} - f(x_i, \vec{p})\right]$$
 
-To perform the simultaneous fit what happens is that the script creates likelihood functions for each dataset $L_{\text{norm}}$ and $L_\text{flip}$. To have the minimizer fit both functions at the same time we simply add their negative logs giving:
-$$- \log{L_\text{flip}} - \log{L_\text{norm}}$$
-This sum is minimized when both the log likelihoods are at minimum. I have also tried using the product but that does not seem to work.
-
-This is implemented in the function `global_poisson_likelihood()` which is then wrapped inside a lambda function to only expose the fit parameters as arguments which is required for `iminuit`'s minimizer `Minuit` to work (the `global_poisson_likelihood()` function requires some extra parameters to function which are provided when wrapping it in the lambda function).
+To perform a simultaneous fit we add the likelihood functions computed using the norm and flip data:
+$$-\mathcal{L}^\textrm{Global} = - \sum_i^{N^\textrm{Flip}} \left[y^\textrm{Flip}_i \log{(f(x^\textrm{Flip}_i; \vec{\alpha}, \vec{b}^\textrm{Flip}))} - f(x^\textrm{Flip}_i; \vec{\alpha}, \vec{b}^\textrm{Flip})\right] \\ - \sum_i^{N^\textrm{Norm}} \left[y^\textrm{Norm}_i \log{(f(x^\textrm{Norm}_i; \vec{\alpha}, \vec{b}^\textrm{Norm}))} - f(x^\textrm{Norm}_i; \vec{\alpha}, \vec{b}^\textrm{Norm})\right]$$
+Here we have 3 parameter vectors $\vec{\alpha}$ and $\vec{b}$ where:
+$$\vec{\alpha} = \begin{pmatrix}
+    x_0 \quad h \quad B \quad s \quad g
+\end{pmatrix},$$
+contains the shared parameters and
+$$\vec{b} = \begin{pmatrix}
+    b_{-2} \quad a_{-1} \quad a_{0} \quad a_{+1} \quad a_{+2}
+\end{pmatrix},$$
+contains the sublevel populations for norm polarization $\vec{b}^\textrm{Norm}$ and flip polarization $\vec{b}^\textrm{Flip}$.
