@@ -66,9 +66,7 @@ To perform a simultaneous fit we add the likelihood functions computed using the
 -\mathcal{L}^\text{Global} = - \sum_i^{N^\text{Flip}} \left[y^\text{Flip}_i \log{(f(x^\text{Flip}_i; \vec{\alpha}, \vec{b}^\text{Flip}))} - f(x^\text{Flip}_i; \vec{\alpha}, \vec{b}^\text{Flip})\right] \\ - \sum_i^{N^\text{Norm}} \left[y^\text{Norm}_i \log{(f(x^\text{Norm}_i; \vec{\alpha}, \vec{b}^\text{Norm}))} - f(x^\text{Norm}_i; \vec{\alpha}, \vec{b}^\text{Norm})\right]
 ```
 Here we have 3 parameter vectors $\vec{\alpha}$ and $\vec{b}$ where:
-$$
-\vec{\alpha} = \begin{pmatrix}x_0 \quad h \quad B \quad s \quad g\end{pmatrix},
-$$
+$$\vec{\alpha} = \begin{pmatrix}x_0 \quad h \quad B \quad s \quad g\end{pmatrix},$$
 contains the shared parameters and
 ```math
 \vec{b} = \begin{pmatrix}
