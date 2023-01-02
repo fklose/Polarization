@@ -69,14 +69,17 @@ Here we have 3 parameter vectors $\vec{\alpha}$ and $\vec{b}$ where:
 ```math
 \vec{\alpha} = \begin{pmatrix}
     x_0 \quad h \quad B \quad s \quad g
-\end{pmatrix},```
+\end{pmatrix},
+```
 contains the shared parameters and
 ```math
 \vec{b} = \begin{pmatrix}
     a_{-2} \quad a_{-1} \quad a_{0} \quad a_{+1} \quad a_{+2}
-\end{pmatrix},```
+\end{pmatrix},
+```
 contains the sublevel populations for norm polarization $\vec{b}^\text{Norm}$ and flip polarization $\vec{b}^\text{Flip}$.
 The model fitted to each spectrum is given by:
 ```math
-f(x; \vec{\alpha}, \vec{b}) = \sum_{m_F=-1}^{1} s_{1, m_F} a_{m_F} V\left(f - x_{0} + h - \frac{2}{3} m_F \bar{\mu}_B B, g, s \right) \nonumber \\ + \sum_{m_F=-2}^{2} s_{2, m_F} a_{m_F} V\left(x - x_{0} - \frac{1}{3} m_F \bar{\mu}_B B, g, s \right)```
+f(x; \vec{\alpha}, \vec{b}) = \sum_{m_F=-1}^{1} s_{1, m_F} a_{m_F} V\left(f - x_{0} + h - \frac{2}{3} m_F \bar{\mu}_B B, g, s \right) \nonumber \\ + \sum_{m_F=-2}^{2} s_{2, m_F} a_{m_F} V\left(x - x_{0} - \frac{1}{3} m_F \bar{\mu}_B B, g, s \right)
+```
 Here $s_{F, m_F}$ are the transition strengths (a weighting factor), $V(x, g, s)$ is the Voigt profile (a convolution of a Lorentzian and Gaussian distribution) where $g$ and $s$ are the widths of the Lorentzian and Gaussian part respectively and $\bar{\mu}_B = \mu_B / h$ where $\mu_B$ is the Bohr magneton.
