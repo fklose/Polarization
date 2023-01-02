@@ -25,7 +25,7 @@ Adjust `CUTS` if necessary and run again.
 ### Prerequisites
 #### ROOT
 To use this script it requires the following pre-requisites:
-* A ROOT install that provides access to ROOT's python interface
+* A ROOT install that provides access to ROOT's python interface (I recommend installing it using conda)
     * I have tested this with ROOT6. ROOT5 should also work since I am using very basic functionality, but I have not tested this.
 
 #### Python Modules
