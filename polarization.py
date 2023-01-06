@@ -199,23 +199,23 @@ flip.plot(f_plotting, sublevel_model(f_plotting, *p_flip), color="red", lw=2)
 # Plot associated residuals along with 1-sigma region
 norm_residuals = y_norm - sublevel_model(frequencies, *p_norm)
 norm_res.errorbar(frequencies, norm_residuals, np.sqrt(y_norm), ls="", marker=".", markersize=8, color="black")
-norm_res.hlines(0, min(frequencies), max(frequencies), lw=2, color="red")
-norm_res.fill_between(f_plotting, -np.std(norm_residuals), np.std(norm_residuals), alpha=0.2, color="grey")
+norm_res.hlines(0, min(f_plotting), max(f_plotting), lw=2, color="red")
+norm_res.fill_between(f_plotting, np.mean(norm_residuals) - np.std(norm_residuals), np.mean(norm_residuals) + np.std(norm_residuals), alpha=0.2, color="grey")
 
 flip_residuals = y_flip - sublevel_model(frequencies, *p_flip)
 flip_res.errorbar(frequencies, flip_residuals, np.sqrt(y_flip), ls="", marker=".", markersize=8, color="black")
-flip_res.hlines(0, min(frequencies), max(frequencies), lw=2, color="red")
-flip_res.fill_between(f_plotting, -np.std(flip_residuals), np.std(flip_residuals), alpha=0.2, color="grey")
+flip_res.hlines(0, min(f_plotting), max(f_plotting), lw=2, color="red")
+flip_res.fill_between(f_plotting, np.mean(flip_residuals) - np.std(flip_residuals), np.mean(flip_residuals) + np.std(flip_residuals), alpha=0.2, color="grey")
 
 # Format plots, adding and adjusting titles, ticks and ticklabels
 alpha = 0.7
 
-norm.set_title("Norm Polarization")
+norm.set_title("Norm Spectrum")
 norm.set_ylabel("Counts") # ylabels are shared across both columns
 norm.set_xlim(f_plotting[0], f_plotting[-1])
 norm.grid(alpha=alpha)
 
-flip.set_title("Flip Polarization")
+flip.set_title("Flip Spectrum")
 flip.set_xlim(f_plotting[0], f_plotting[-1])
 flip.grid(alpha=alpha)
 
