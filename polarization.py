@@ -228,6 +228,15 @@ flip_res.set_xlabel("Frequency wrt $^{39}$K cog (MHz)")
 flip_res.set_xlim(f_plotting[0], f_plotting[-1])
 flip_res.grid(alpha=alpha)
 
+# Adjust vertical range so both spectra are on the same scale
+norm_ylim = norm.get_ylim()
+flip_ylim = flip.get_ylim()
+
+ylim = (min(norm_ylim[0], flip_ylim[0]), max(norm_ylim[1], flip_ylim[1]))
+
+norm.set_ylim(ylim)
+flip.set_ylim(ylim)
+
 # Save figure
 plt.savefig(OUTPUT_PATH + "/fit.png")
 plt.savefig(OUTPUT_PATH + "/fit.pdf")
