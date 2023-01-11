@@ -59,7 +59,7 @@ These can be installed using pip:
 ![Example fit](./Example%201/fit.png)
 
 * Top row shows data (black dots with errorbars) and fit (red line)
-* Bottom row shows residuals (black dots), mean of residuals (red line) and $\pm$ 1-$\sigma$ region centered around the mean (grey region)
+* Bottom row shows residuals (black dots), mean of residuals (dark grey line) and $\pm$ 1-$\sigma$ region centered around the mean (grey region)
 
 ## Fitting Procedure
 The main problem with the polarization data is that the sublevels are identified using their frequency shifts.
