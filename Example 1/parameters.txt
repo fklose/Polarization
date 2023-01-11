@@ -1,0 +1,37 @@
+Parameter       Value       Standard Error    Unit
+-----------  --------  ---  ----------------  ------  -----
+x0           362.969   +/-  0.0337            MHz
+h              9.94                           MHz     fixed
+B             -2.4153  +/-  0.0317            G
+s              1.6946  +/-  0.0336            MHz
+g              1.1                            MHz     fixed
+
+Parameter       Value         Standard Error  Unit
+-----------  --------  ---  ----------------  ------  ----
+am2          803.222   +/-           13.8586          FLIP
+am1          104.366   +/-            6.9668          FLIP
+a0             0.0078  +/-            0.625           FLIP
+ap1            0.2111  +/-            0.8654          FLIP
+ap2           54.1092  +/-            9.8788          FLIP
+---> P (Flip): -0.8329 +/- 0.0192
+
+Parameter        Value         Standard Error  Unit
+-----------  ---------  ---  ----------------  ------  ----
+am2            81.096   +/-           11.4868          NORM
+am1             0.0139  +/-            2.36            NORM
+a0              0.0004  +/-            1.0563          NORM
+ap1           144.484   +/-            6.9745          NORM
+ap2          1051.55    +/-           16.9486          NORM
+---> P (Norm): 0.8164 +/- 0.0168
+
+chi2		:  29221.424152
+dof		:  93
+chi2/dof	:  314.208862
+
+Name            Lower Cut    Upper Cut
+------------  -----------  -----------
+BITS                    1           52
+X                       0           20
+Y                    1640         1720
+Z                     -25           10
+TTTL_OP_Beam            0         4200
