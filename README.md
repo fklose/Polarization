@@ -25,19 +25,6 @@ Generates a printout of the fit parameters and saves them to a `.txt` file.
 Adjust `CUTS` if necessary and run again.
 1. Once the histograms look good adjust fit parameters until fit looks good.
 
-Note that in its current form the calculated $\chi^2$ can be infinite. In this case the script will throw an error similar to:
-```
-/mnt/Secondary/Repositories/Polarization/Example 2/polarization.py:132: RuntimeWarning: divide by zero encountered in log
-  chi2_flip[y_flip != 0] += y_flip * np.log(y_flip / sublevel_model(frequencies, *p_flip))
-/mnt/Secondary/Repositories/Polarization/Example 2/polarization.py:132: RuntimeWarning: invalid value encountered in multiply
-  chi2_flip[y_flip != 0] += y_flip * np.log(y_flip / sublevel_model(frequencies, *p_flip))
-Traceback (most recent call last):
-  File "/mnt/Secondary/Repositories/Polarization/Example 2/polarization.py", line 132, in <module>
-    chi2_flip[y_flip != 0] += y_flip * np.log(y_flip / sublevel_model(frequencies, *p_flip))
-ValueError: operands could not be broadcast together with shapes (45,) (53,) (45,) 
-```
-In this case just comment out the section of code that computes the variables `chi2_flip`, `chi2_norm` and manually set `chi2` equal to zero.
-
 ### Prerequisites
 #### Python
 Version: 3.10.5 or higher (python is excellent with respect to backwards compatibility excluding the jump from python 2 to python 3)
@@ -113,3 +100,30 @@ f(x; \vec{\alpha}, \vec{b}) = \sum_{m_F=-1}^{1} s_{1, m_F} a_{m_F} V\left(f - x_
 + \sum_{m_F=-2}^{2} s_{2, m_F} a_{m_F} V\left(x - x_{0} - \frac{1}{3} m_F \bar{\mu}_B B, g, s \right)
 ```
 Here $s_{F, m_F}$ are the transition strengths (a weighting factor), $V(x, g, s)$ is the Voigt profile (a convolution of a Lorentzian and Gaussian distribution) where $g$ and $s$ are the widths of the Lorentzian and Gaussian part respectively and $\bar{\mu}_B = \mu_B / h$ where $\mu_B$ is the Bohr magneton.
+
+## Comments
+
+### $\chi^2$
+Note that in its current form the calculated $\chi^2$ can be infinite. In this case the script will throw an error similar to:
+```
+/mnt/Secondary/Repositories/Polarization/Example 2/polarization.py:132: RuntimeWarning: divide by zero encountered in log
+  chi2_flip[y_flip != 0] += y_flip * np.log(y_flip / sublevel_model(frequencies, *p_flip))
+/mnt/Secondary/Repositories/Polarization/Example 2/polarization.py:132: RuntimeWarning: invalid value encountered in multiply
+  chi2_flip[y_flip != 0] += y_flip * np.log(y_flip / sublevel_model(frequencies, *p_flip))
+Traceback (most recent call last):
+  File "/mnt/Secondary/Repositories/Polarization/Example 2/polarization.py", line 132, in <module>
+    chi2_flip[y_flip != 0] += y_flip * np.log(y_flip / sublevel_model(frequencies, *p_flip))
+ValueError: operands could not be broadcast together with shapes (45,) (53,) (45,) 
+```
+In this case just comment out the section of code that computes the variables `chi2_flip`, `chi2_norm` and manually set `chi2` equal to zero.
+
+### Features to add
+* Fitting $F \rightarrow 1'$. Currently only $F \rightarrow 2'$ is modelled. To implement this functionality consider the following steps:
+    1. Implement a function `sublevel_model_F1` in `_models.py` (can be done similarily to how `sublevel_model_F2` is implemented).
+    1. Implement a function `nuclear_polarization_41K_F1` in `_physics.py`. Use `nuclear_polarization_41K_F2` as a guide. Using `ufloat()` allows for easily propagating statistical uncertainties.
+    1. In `polarization.py` adjust `global_poisson_likelihood` to call `sublevel_model_F1` instead of `sublevel_model_F2`. Adjust parameters names so that they make sense.
+    1. Adjust the initial guess in the call to `Minuit()`. This also involves changing the parameter names. `Minuit` knows the parameter names of the cost function and so when setting the initial guess they need to be correct.
+    1. Adjust parameter limits and fixed parameters if necessary.
+    1. Adjust what parameters are assigned to `p_norm` and `p_flip`. In reality this only requires making sure that the correct parameter names are given and that they are in the same order as required by the `sublevel_model_F1` function.
+    1. Call `nuclear_polarization_41K_F1` instead of `nuclear_polarization_41K_F2` and make sure that the arguents are correctly provided.
+* Instead of $\chi^2$ it might be better to just provide the value of the likelihood function at the minimum.

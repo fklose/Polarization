@@ -5,7 +5,7 @@ from iminuit import Minuit
 from tabulate import tabulate
 # Import from files
 from _load import load_data, compute_observables, generate_histograms
-from _models import sublevel_model
+from _models import sublevel_model_F2
 from _physics import nuclear_polarization_41K_F2
 
 # Set data input and output paths
@@ -91,8 +91,8 @@ def global_poisson_likelihood(x0, h, B, s, g, am2_norm, am1_norm, a0_norm, ap1_n
     
     global frequencies, y_norm, y_flip
     
-    norm = sublevel_model(frequencies, x0, h, am2_norm, am1_norm, a0_norm, ap1_norm, ap2_norm, B, s, g)
-    flip = sublevel_model(frequencies, x0, h, am2_flip, am1_flip, a0_flip, ap1_flip, ap2_flip, B, s, g)
+    norm = sublevel_model_F2(frequencies, x0, h, am2_norm, am1_norm, a0_norm, ap1_norm, ap2_norm, B, s, g)
+    flip = sublevel_model_F2(frequencies, x0, h, am2_flip, am1_flip, a0_flip, ap1_flip, ap2_flip, B, s, g)
     
     return - np.sum(y_norm * np.log(norm) - norm) - np.sum(y_flip * np.log(flip) - flip)
 
@@ -128,10 +128,10 @@ P_FLIP = nuclear_polarization_41K_F2(m.values["am2_flip", "am1_flip", "a0_flip",
                                      m.errors["am2_flip", "am1_flip", "a0_flip", "ap1_flip", "ap2_flip"])
 
 # Attempt to compute some fit statistics
-chi2_flip = sublevel_model(frequencies, *p_flip)
-chi2_flip[y_flip != 0] += y_flip * np.log(y_flip / sublevel_model(frequencies, *p_flip))
-chi2_norm = sublevel_model(frequencies, *p_norm)
-chi2_norm[y_norm != 0] += y_norm * np.log(y_norm / sublevel_model(frequencies, *p_norm))
+chi2_flip = sublevel_model_F2(frequencies, *p_flip)
+chi2_flip[y_flip != 0] += y_flip * np.log(y_flip / sublevel_model_F2(frequencies, *p_flip))
+chi2_norm = sublevel_model_F2(frequencies, *p_norm)
+chi2_norm[y_norm != 0] += y_norm * np.log(y_norm / sublevel_model_F2(frequencies, *p_norm))
 
 chi2 = 2*np.sum(chi2_flip) + 2*np.sum(chi2_norm)
 
@@ -191,18 +191,18 @@ f_plotting = np.linspace(frequencies[0] - np.mean(np.diff(frequencies)), frequen
 
 # Plot spectra and fits
 norm.errorbar(frequencies, y_norm, np.sqrt(y_norm), marker=".", ls="", color="black", markersize=8)
-norm.plot(f_plotting, sublevel_model(f_plotting, *p_norm), color="red", lw=2)
+norm.plot(f_plotting, sublevel_model_F2(f_plotting, *p_norm), color="red", lw=2)
 
 flip.errorbar(frequencies, y_flip, np.sqrt(y_flip), marker=".", ls="", color="black", markersize=8)
-flip.plot(f_plotting, sublevel_model(f_plotting, *p_flip), color="red", lw=2)
+flip.plot(f_plotting, sublevel_model_F2(f_plotting, *p_flip), color="red", lw=2)
 
 # Plot associated residuals along with 1-sigma region
-norm_residuals = y_norm - sublevel_model(frequencies, *p_norm)
+norm_residuals = y_norm - sublevel_model_F2(frequencies, *p_norm)
 norm_res.errorbar(frequencies, norm_residuals, np.sqrt(y_norm), ls="", marker=".", markersize=8, color="black")
 norm_res.hlines(np.mean(norm_residuals), min(f_plotting), max(f_plotting), lw=2, color="dimgrey")
 norm_res.fill_between(f_plotting, np.mean(norm_residuals) - np.std(norm_residuals), np.mean(norm_residuals) + np.std(norm_residuals), alpha=0.2, color="grey")
 
-flip_residuals = y_flip - sublevel_model(frequencies, *p_flip)
+flip_residuals = y_flip - sublevel_model_F2(frequencies, *p_flip)
 flip_res.errorbar(frequencies, flip_residuals, np.sqrt(y_flip), ls="", marker=".", markersize=8, color="black")
 flip_res.hlines(np.mean(flip_residuals), min(f_plotting), max(f_plotting), lw=2, color="dimgrey")
 flip_res.fill_between(f_plotting, np.mean(flip_residuals) - np.std(flip_residuals), np.mean(flip_residuals) + np.std(flip_residuals), alpha=0.2, color="grey")
