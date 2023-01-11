@@ -55,6 +55,12 @@ These can be installed using pip:
 2. **histograms_*.root**: Saves the data relevant to the analysis in `.root` files. Included is data before applying cuts and after.
 3. **parameters.txt**: Copy of the script output. Includes fit parameters and statistics, nuclear polarization and the cuts applied to the data.
 
+#### Example output plot
+![Example fit](./Example%201/fit.png)
+
+* Top row shows data (black dots with errorbars) and fit (red line)
+* Bottom row shows residuals (black dots), mean of residuals (red line) and $\pm$ 1-$\sigma$ region centered around the mean (grey region)
+
 ## Fitting Procedure
 The main problem with the polarization data is that the sublevels are identified using their frequency shifts.
 This is hard since the sublevel shifts depend on three parameters: $x_0$ which is a "frequency" shift related to the isotope shift, $B$ the magnetic field (Zeeman effect) and the laser power (Stark shift) (in its current form the script does not account for a Stark shift and I am only mentioning it here for completeness).
@@ -75,9 +81,11 @@ To perform a simultaneous fit we add the likelihood functions computed using the
 ```math
 - \mathcal{L}^\text{Global} = - \mathcal{L}^\text{Flip} - \mathcal{L}^\text{Norm}
 ```
-```math
+<!-- ```math -->
+$$
 -\mathcal{L}^\text{Global} = - \sum_i^{N^\text{Flip}} \left[y^\text{Flip}_i \log{(f(x^\text{Flip}_i; \vec{\alpha}, \vec{b}^\text{Flip}))} - f(x^\text{Flip}_i; \vec{\alpha}, \vec{b}^\text{Flip})\right]
-```
+% ```
+$$
 ```math
 - \sum_i^{N^\text{Norm}} \left[y^\text{Norm}_i \log{(f(x^\text{Norm}_i; \vec{\alpha}, \vec{b}^\text{Norm}))} - f(x^\text{Norm}_i; \vec{\alpha}, \vec{b}^\text{Norm})\right]
 ```
