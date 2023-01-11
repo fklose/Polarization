@@ -15,17 +15,40 @@ Loads data, makes cuts and fits the model to the generated spectra.
 Generates a printout of the fit parameters and saves them to a `.txt` file.
 
 ## How to use this script
-1. Set `OUTPUT_PATH`. I recommend making a folder containing the two `.root` files for FLIP and NORM and using that to store the output of this script to keep all files used in this analysis in the same place for better organization.
-2. Set `path_flip` and `path_norm` to point to the correct `.root` files.
-3. Set the measurement parameters `V_MIN`, `V_MAX`, `STEPS` and `LOCKPOINT`. These should be recorded for every measurement.
-4. Run the script.
-5. Check the histograms generated in `.root` files called `histograms_*.root` in the output folder to make sure that cuts are done properly.
+1. Make a new folder and copy the `.py` files from one of the examples.
+1. Move the relevant `.root` files into the folder (one for FLIP and one for NORM polarization).
+1. Set `OUTPUT_PATH` and `path_flip` and `path_norm` to point to the correct `.root` files.
+1. Set the measurement parameters `V_MIN`, `V_MAX`, `STEPS` and `LOCKPOINT`. These should be recorded for every measurement.
+1. Run the script. The script must be run from the Polarization directory (running `pwd` should print `/{some path}/Polarization`). On Linux the script can be run by simply typing `python /{some path}/Polarization/{folder name}/polarization.py` (this assumes that the python installation is properly set up on the system).
+    * When using conda ensure that the correct environment is used by running `conda activate {environment name}` before executing the python script.
+1. Check the histograms generated in `.root` files called `histograms_*.root` in the output folder to make sure that cuts are done properly.
 Adjust `CUTS` if necessary and run again.
+1. Once the histograms look good adjust fit parameters until fit looks good.
+
+Note that in its current form the calculated $\chi^2$ can be infinite. In this case the script will throw an error similar to:
+```
+/mnt/Secondary/Repositories/Polarization/Example 2/polarization.py:132: RuntimeWarning: divide by zero encountered in log
+  chi2_flip[y_flip != 0] += y_flip * np.log(y_flip / sublevel_model(frequencies, *p_flip))
+/mnt/Secondary/Repositories/Polarization/Example 2/polarization.py:132: RuntimeWarning: invalid value encountered in multiply
+  chi2_flip[y_flip != 0] += y_flip * np.log(y_flip / sublevel_model(frequencies, *p_flip))
+Traceback (most recent call last):
+  File "/mnt/Secondary/Repositories/Polarization/Example 2/polarization.py", line 132, in <module>
+    chi2_flip[y_flip != 0] += y_flip * np.log(y_flip / sublevel_model(frequencies, *p_flip))
+ValueError: operands could not be broadcast together with shapes (45,) (53,) (45,) 
+```
+In this case just comment out the section of code that computes the variables `chi2_flip`, `chi2_norm` and manually set `chi2` equal to zero.
 
 ### Prerequisites
+#### Python
+Version: 3.10.5 or higher (python is excellent with respect to backwards compatibility excluding the jump from python 2 to python 3)
+
+On Linux systems I recommend using a conda environment. The advantages are that you can avoid messing with the python version installed natively on most systems which might affect how the system works. It also makes it easy to install ROOT with its python interface (which is needed for this code to run).
+
+I recommend [miniconda](https://docs.conda.io/en/latest/miniconda.html) ([https://docs.conda.io/en/latest/miniconda.html](https://docs.conda.io/en/latest/miniconda.html)).
+Prior to installing any conda environments I recommend installing [mamba](https://anaconda.org/conda-forge/mamba) ([https://anaconda.org/conda-forge/mamba](https://anaconda.org/conda-forge/mamba)). Mamba speeds up how fast conda can install environments (on my machine installing root without mamba took about 15 minutes, with mamba less than a minute).
+
 #### ROOT
-To use this script it requires the following pre-requisites:
-* A ROOT install that provides access to ROOT's python interface (I recommend installing it using conda)
+* A [ROOT](https://root.cern/install/) install that provides access to ROOT's python interface (I recommend installing it using conda)
     * I have tested this with ROOT6. ROOT5 should also work since I am using very basic functionality, but I have not tested this.
 
 #### Python Modules
