@@ -81,10 +81,8 @@ To perform a simultaneous fit we add the likelihood functions computed using the
 ```math
 - \mathcal{L}^\text{Global} = - \mathcal{L}^\text{Flip} - \mathcal{L}^\text{Norm}
 ```
-<!-- ```math -->
 $$
 -\mathcal{L}^\text{Global} = - \sum_i^{N^\text{Flip}} \left[y^\text{Flip}_i \log{(f(x^\text{Flip}_i; \vec{\alpha}, \vec{b}^\text{Flip}))} - f(x^\text{Flip}_i; \vec{\alpha}, \vec{b}^\text{Flip})\right]
-% ```
 $$
 ```math
 - \sum_i^{N^\text{Norm}} \left[y^\text{Norm}_i \log{(f(x^\text{Norm}_i; \vec{\alpha}, \vec{b}^\text{Norm}))} - f(x^\text{Norm}_i; \vec{\alpha}, \vec{b}^\text{Norm})\right]
